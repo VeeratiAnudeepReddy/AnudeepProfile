@@ -46,28 +46,32 @@ const btn = (label, cls = "sim-btn") => { const b = el("button", cls, label); b.
 // ------------------------------------------------------------
 // 1. PondFix: live telemetry, forecast, escalating alerts
 // ------------------------------------------------------------
+// 1. PondFix: ESP32 telemetry, forecast, AI advice, escalating alerts, offline-first link
+// ------------------------------------------------------------
 function initPond(root) {
-    const { head, body, foot } = scaffold(root, "Illustrative simulation of the live telemetry stream");
+    const { head, body, foot } = scaffold(root, "Illustrative simulation of the ESP32 telemetry stream");
     const pond = el("select");
     for (let i = 1; i <= 17; i++) pond.append(new Option(`Pond ${i}`, i));
-    const go = btn("Inject anomaly");
+    const go = btn("Inject anomaly"), cut = btn("Cut Wi-Fi");
     head.insertBefore(pond, head.children[1]);
     head.insertBefore(go, head.children[2]);
+    head.insertBefore(cut, head.children[3]);
 
     const rows = [
-        { k: "pH",   base: 7.4, min: 6.5, max: 8.5, amp: 0.1, unit: "" },
-        { k: "DO",   base: 6.5, min: 2,   max: 9,   amp: 0.3, unit: " mg/L" },
-        { k: "Temp", base: 28,  min: 24,  max: 34,  amp: 0.3, unit: " °C" },
+        { k: "pH",      base: 7.4,  min: 6.5, max: 8.5, amp: 0.1,  unit: "",       dp: 2 },
+        { k: "DO",      base: 6.5,  min: 2,   max: 9,   amp: 0.3,  unit: " mg/L",  dp: 2 },
+        { k: "Temp",    base: 28,   min: 24,  max: 34,  amp: 0.3,  unit: " °C",    dp: 1 },
+        { k: "Ammonia", base: 0.12, min: 0,   max: 0.8, amp: 0.015, unit: " mg/L", dp: 2 },
     ];
-    const N = 56, W = 480, H = 124, RH = 41, X0 = 92;
+    const N = 56, W = 480, RH = 38, H = RH * rows.length, X0 = 96;
     rows.forEach(r => { r.data = Array(N).fill(r.base); });
 
     const svg = svgEl("svg", { viewBox: `0 0 ${W} ${H}` });
     rows.forEach((r, i) => {
         r.path = svgEl("polyline", { fill: "none", stroke: "#d5af4d", "stroke-width": 1.8, "stroke-linejoin": "round" });
         r.fore = svgEl("polyline", { fill: "none", stroke: "#7cd9a2", "stroke-width": 1.4, "stroke-dasharray": "4 3", opacity: 0 });
-        r.label = svgEl("text", { x: 2, y: i * RH + 15, fill: "#e3c986", "font-size": 11, "font-weight": 600 });
-        r.val = svgEl("text", { x: 2, y: i * RH + 31, fill: "#d1d1d1", "font-size": 11 });
+        r.label = svgEl("text", { x: 2, y: i * RH + 14, fill: "#e3c986", "font-size": 11, "font-weight": 600 });
+        r.val = svgEl("text", { x: 2, y: i * RH + 28, fill: "#d1d1d1", "font-size": 11 });
         svg.append(svgEl("line", { x1: X0, x2: W, y1: i * RH + RH - 2, y2: i * RH + RH - 2, stroke: "rgba(255,255,255,.07)" }), r.path, r.fore, r.label, r.val);
     });
     const fcLabel = svgEl("text", { x: W - 4, y: RH + 10, fill: "#7cd9a2", "font-size": 9, "text-anchor": "end", opacity: 0 });
@@ -75,14 +79,24 @@ function initPond(root) {
     svg.append(fcLabel);
     body.append(svg);
 
-    const chips = el("div", "chips");
-    const stages = ["Dashboard alert", "App push", "Voice call"].map(t => { const c = el("span", "chip bad", t); chips.append(c); return c; });
-    const status = el("span", "chip ok on", "All ponds normal");
-    chips.prepend(status);
+    // connectivity + alert chain
+    const chips = el("div", "chips"); chips.style.marginTop = "6px";
+    const link = el("span", "chip ok on", "Wi-Fi online");
+    const sensors = el("span", "chip ok on", "4/4 sensors healthy");
+    const status = el("span", "chip ok on", "Pond normal");
+    const stages = ["Dashboard alert", "App push", "Voice call"].map(t => { const c = el("span", "chip bad", t); return c; });
+    chips.append(link, sensors, status, ...stages);
+    const advice = el("div", "txt-row");
+    advice.style.marginTop = "6px";
+    const adviceT = el("div");
+    advice.append(el("small", null, "AI assistant (RAG)"), adviceT);
     body.parentNode.insertBefore(chips, foot);
-    chips.style.marginTop = "6px";
+    body.parentNode.insertBefore(advice, foot);
+    const say = t => { if (adviceT.textContent !== t) adviceT.textContent = t; };
+    say("Water quality is within range. No action needed.");
 
     let tick = 0, anomaly = -1, alertAt = -1;
+    let mode = "wifi", modeT = 0, buffered = 0;
     const ptsFor = (d, r, i, offset = 0) => d.map((v, j) => {
         const x = X0 + ((j + offset) / (N + 10)) * (W - X0 - 6);
         const y = i * RH + RH - 6 - ((clamp(v, r.min, r.max) - r.min) / (r.max - r.min)) * (RH - 16);
@@ -90,42 +104,59 @@ function initPond(root) {
     }).join(" ");
 
     go.onclick = () => { if (anomaly < 0) { anomaly = 0; alertAt = -1; } };
+    cut.onclick = () => { if (mode === "wifi") { mode = "buffer"; modeT = 0; buffered = 0; } };
     pond.onchange = () => { rows.forEach(r => r.data.fill(r.base)); anomaly = -1; alertAt = -1; };
 
     function step() {
         tick++;
-        let doDrop = 0;
+        let drop = 0;
         if (anomaly >= 0) {
             anomaly++;
-            doDrop = anomaly < 16 ? anomaly * 0.24 : Math.max(0, (16 + 10 - anomaly) * 0.37);
+            drop = anomaly < 16 ? anomaly * 0.24 : Math.max(0, (16 + 10 - anomaly) * 0.37);
             if (anomaly > 26) anomaly = -1;
         }
         rows.forEach((r, i) => {
             const noise = Math.sin(tick / (5 + i * 2)) * r.amp * 2 + (Math.random() - 0.5) * r.amp * 2;
             let v = r.base + noise;
-            if (r.k === "DO") v -= doDrop;
-            if (r.k === "pH") v -= doDrop * 0.05;
+            if (r.k === "DO") v -= drop;
+            if (r.k === "pH") v -= drop * 0.05;
+            if (r.k === "Ammonia") v += drop * 0.022;
             r.data.push(v); r.data.shift();
             r.path.setAttribute("points", ptsFor(r.data, r, i));
             r.label.textContent = r.k;
-            r.val.textContent = v.toFixed(r.k === "Temp" ? 1 : 2) + r.unit;
+            r.val.textContent = v.toFixed(r.dp) + r.unit;
         });
-        // forecast for DO: extrapolate recent slope
         const d = rows[1].data, slope = (d[N - 1] - d[N - 7]) / 6;
         const fc = []; for (let j = 1; j <= 8; j++) fc.push(d[N - 1] + slope * j * 1.2);
         const show = anomaly >= 0 && slope < -0.03;
         rows[1].fore.setAttribute("points", ptsFor([d[N - 1], ...fc], rows[1], 1, N - 1));
         rows[1].fore.setAttribute("opacity", show ? 1 : 0);
         fcLabel.setAttribute("opacity", show ? 1 : 0);
+        rows[1].fore.setAttribute("transform", `translate(0 0)`);
+        fcLabel.setAttribute("y", RH + 10);
 
-        // escalation: alert fires when DO crosses a threshold, then escalates
+        // alert chain: fires when DO crosses the threshold and escalates while it stays low
         const low = d[N - 1] < 4.6;
         if (low && alertAt < 0) alertAt = tick;
         if (!low && alertAt >= 0 && anomaly < 0) alertAt = -1;
         const since = alertAt < 0 ? -1 : tick - alertAt;
         stages.forEach((c, i) => c.classList.toggle("on", since >= i * 4));
         status.className = "chip " + (since >= 0 ? "bad on" : "ok on");
-        status.textContent = since >= 0 ? `Pond ${pond.value}: low DO` : "All ponds normal";
+        status.textContent = since >= 0 ? `Pond ${pond.value}: low oxygen` : "Pond normal";
+        const ammonia = rows[3].data[N - 1] > 0.3;
+        if (since >= 0) say(ammonia ? "Low oxygen and rising ammonia. Start the aerators now, pause feeding, and plan a partial water change." : "Low dissolved oxygen. Start the aerators, pause feeding and check again in 15 minutes.");
+        else say("Water quality is within range. No action needed.");
+
+        // offline-first link: buffer, fall back to cellular, then sync
+        if (mode !== "wifi") {
+            modeT++;
+            if (mode === "buffer") { buffered++; if (modeT >= 6) { mode = "cell"; modeT = 0; } }
+            else if (mode === "cell") { if (modeT >= 5) { mode = "wifi"; } }
+        }
+        if (mode === "wifi") { link.className = "chip ok on"; link.textContent = buffered ? `Back online · synced ${buffered} readings` : "Wi-Fi online"; }
+        if (mode === "buffer") { link.className = "chip warn on"; link.textContent = `Offline · buffering ${buffered} readings`; }
+        if (mode === "cell") { link.className = "chip warn on"; link.textContent = "Cellular fallback · uploading buffer"; }
+        if (mode === "wifi" && buffered && modeT === 0 && tick % 40 === 0) buffered = 0;
     }
     const vis = watch(root);
     const timer = setInterval(() => { if (vis.visible) step(); }, 330);
@@ -134,47 +165,83 @@ function initPond(root) {
 }
 
 // ------------------------------------------------------------
-// 2. Privacy agent: local PII redaction + 5-stage pipeline
+// 2. Privacy-preserving browser agent: capture, on-device redaction, plan, act, audit
 // ------------------------------------------------------------
 function initPrivacy(root) {
-    const { head, body, foot } = scaffold(root, "Illustrative simulation. PII never leaves the browser");
+    const { head, body, foot } = scaffold(root, "Illustrative. The real agent runs Vision, OCR and NER on-device via WebGPU/WASM");
     const run = btn("Run agent");
+    const tog = btn("Privacy engine: ON", "sim-btn on");
     head.insertBefore(run, head.children[1]);
+    head.insertBefore(tog, head.children[2]);
 
-    const parts = [
-        { t: "Hi, I'm " }, { p: "Priya Nair", tag: "NAME" }, { t: ". Mail " }, { p: "priya.nair@mail.com", tag: "EMAIL" },
-        { t: ", call " }, { p: "+91 98765 43210", tag: "PHONE" }, { t: ", card " }, { p: "4111 1111 1111 1111", tag: "CARD" }, { t: "." },
+    const cmd = el("div", "txt-row", "<small>Command (text or voice)</small>Fill in the checkout form and place my order");
+    const fields = [
+        { k: "Name", v: "Priya Nair", tag: "NAME" },
+        { k: "Email", v: "priya.nair@mail.com", tag: "EMAIL" },
+        { k: "Phone", v: "+91 98765 43210", tag: "PHONE" },
+        { k: "Card", v: "4111 1111 1111 1111", tag: "CARD" },
     ];
-    const raw = el("div", "txt-row", "<small>Screen text (stays local)</small>");
-    const rawT = el("div"); raw.append(rawT);
-    const out = el("div", "txt-row", "<small>Sent to LLM (sanitized)</small>");
-    const outT = el("div", null, "<span style='color:#8f8f8f'>waiting for run…</span>"); out.append(outT);
-    const draw = (target, n) => {
-        target.innerHTML = parts.slice(0, n).map(s => s.p ? `<span class="pii">${s.p}</span>` : s.t).join("");
+    const page = el("div", "txt-row");
+    page.append(el("small", null, "Page in your browser (stays on this device)"));
+    const pageT = el("div", "kv");
+    page.append(pageT);
+    const out = el("div", "txt-row");
+    out.append(el("small", null, "Sent to the backend"));
+    const outT = el("div", "kv");
+    out.append(outT);
+    const draw = (target, mode, n) => {
+        target.innerHTML = fields.slice(0, n).map(f => {
+            if (mode === "raw") return `<span>${f.k}</span><b class="pii">${f.v}</b>`;
+            if (mode === "redacted") return `<span>${f.k}</span><b class="tag">[${f.tag}]</b>`;
+            return `<span>${f.k}</span><b class="leak">${f.v}</b>`;
+        }).join("");
     };
-    const drawOut = n => {
-        outT.innerHTML = parts.slice(0, n).map(s => s.p ? `<span class="tag">[${s.tag}]</span>` : s.t).join("");
-    };
-    draw(rawT, parts.length);
+    draw(pageT, "raw", fields.length);
+    outT.innerHTML = "<span style='grid-column:1/-1;color:#8f8f8f'>nothing sent yet</span>";
 
     const chips = el("div", "chips");
-    const names = ["Parse task", "Plan", "Browser actions", "Verify", "Recover"];
+    const names = ["Capture DOM", "Detect PII", "Redact", "Plan (LLM + JEV)", "Act + verify"];
     const stageEls = names.map(n => { const c = el("span", "chip", n); chips.append(c); return c; });
-    body.append(raw, out, chips);
+    const trace = el("div", "trace");
+    trace.append(el("div", null, "<small>Audit trace</small>"));
+    body.append(cmd, page, out, chips, trace);
 
-    let busy = false;
+    let privacy = true, busy = false;
+    tog.onclick = () => {
+        if (busy) return;
+        privacy = !privacy;
+        tog.textContent = "Privacy engine: " + (privacy ? "ON" : "OFF");
+        tog.classList.toggle("on", privacy);
+    };
+    const log = t => {
+        const line = el("div", "trace-line", `<span>${new Date().toTimeString().slice(0, 8)}</span> ${t}`);
+        trace.append(line);
+        while (trace.children.length > 5) trace.children[1].remove();
+    };
     run.onclick = async () => {
         if (busy) return; busy = true;
         stageEls.forEach(c => c.classList.remove("on"));
-        outT.innerHTML = "";
-        for (let i = 1; i <= parts.length; i++) { drawOut(i); await sleep(i % 2 ? 90 : 230); }
-        for (const c of stageEls) { c.classList.add("on"); await sleep(520); }
+        outT.innerHTML = "<span style='grid-column:1/-1;color:#8f8f8f'>waiting…</span>";
+        while (trace.children.length > 1) trace.lastChild.remove();
+        const mark = async (i, t, ms = 650) => { stageEls[i].classList.add("on"); log(t); await sleep(ms); };
+        await mark(0, "Captured DOM, screenshot and UI state locally");
+        await mark(1, "WebGPU Vision/OCR/NER found 4 sensitive fields");
+        if (privacy) {
+            stageEls[2].classList.add("on"); log("Privacy Engine redacted 4 fields on-device");
+            for (let n = 1; n <= fields.length; n++) { draw(outT, "redacted", n); await sleep(260); }
+            await sleep(250);
+            await mark(3, "Backend planned the task from sanitized state only", 700);
+        } else {
+            log("Privacy Engine is OFF: raw fields are being sent");
+            for (let n = 1; n <= fields.length; n++) { draw(outT, "leak", n); await sleep(260); }
+            outT.append(el("span", "leak-flag", "RAW PII LEFT THE DEVICE"));
+            await mark(3, "Backend received raw PII (zero-trust broken)", 700);
+        }
+        await mark(4, "Filled the form, clicked Place order, verified the result", 400);
         busy = false;
     };
 }
 
-// ------------------------------------------------------------
-// 3. Traffic: fixed timing vs adaptive timing (+10s / -11s)
 // ------------------------------------------------------------
 function initTraffic(root) {
     const { head, body, foot } = scaffold(root, "Illustrative model. The 29.89% figure comes from the SUMO study");
@@ -185,7 +252,10 @@ function initTraffic(root) {
     const cv = el("canvas"); cv.width = 480; cv.height = 200;
     body.append(cv);
     const kp = el("div", "kpis", "<div><b id='k-wait'>0.0s</b><span>avg wait (live)</span></div><div><b id='k-fixed'>--</b><span>Fixed result</span></div><div><b id='k-ai'>--</b><span>AI result</span></div>");
-    body.parentNode.insertBefore(kp, foot);
+    const ro = el("div", "txt-row"); ro.style.minHeight = "0"; ro.style.marginTop = "4px";
+    ro.append(el("small", null, "Controller readout"));
+    const roT = el("div"); ro.append(roT);
+    body.parentNode.insertBefore(kp, foot); body.parentNode.insertBefore(ro, foot);
     const kWait = $("#k-wait", kp), kFixed = $("#k-fixed", kp), kAI = $("#k-ai", kp);
     const ctx = cv.getContext("2d");
 
@@ -247,6 +317,11 @@ function initTraffic(root) {
         });
         const avg = sim.n ? sim.wait / sim.n : 0;
         kWait.textContent = avg.toFixed(1) + "s";
+        {
+            const cnt = ax => approaches.reduce((n, a, i) => n + (a.axis === ax ? sim.cars[i].filter(c => c.d > 0 && c.d < 120).length : 0), 0);
+            const g = sim.phase === "green" ? `${sim.axis === "EW" ? "East-West" : "North-South"} green for ${Math.round(sim.dur)}s${mode === "ai" ? ` (${sim.dur >= BASE ? "+" : ""}${Math.round(sim.dur - BASE)}s vs fixed)` : ""}` : "All red clearance";
+            roT.textContent = `${g}. Queue detected: East-West ${cnt("EW")}, North-South ${cnt("NS")} vehicles.`;
+        }
         if (sim.n >= 40) results[mode] = avg;
         kFixed.textContent = results.fixed != null ? results.fixed.toFixed(1) + "s" : "--";
         kAI.textContent = results.ai != null ? results.ai.toFixed(1) + "s" : "--";
@@ -351,18 +426,25 @@ function initCivix(root) {
 // ------------------------------------------------------------
 // 5. Railway: shortest-route finder on a small network
 // ------------------------------------------------------------
+// 5. RailConnect: multi-hop routing with a via station, accessibility filter and delay risk
+// ------------------------------------------------------------
 function initRail(root) {
-    const { head, body, foot } = scaffold(root, "Illustrative network. The real system solves time-expanded graphs with CP-SAT");
+    const { head, body, foot } = scaffold(root, "Illustrative network. The real system uses time-expanded graphs and CP-SAT");
     const nodes = {
-        DEL: [250, 16], BPL: [235, 52], BOM: [110, 78], NGP: [290, 78], KOL: [430, 58],
-        HYD: [255, 108], BLR: [200, 124], MAS: [335, 122],
+        DEL: [250, 16, true], BPL: [235, 52, false], BOM: [110, 78, true], NGP: [290, 78, true], KOL: [430, 58, true],
+        HYD: [255, 108, true], BLR: [200, 124, true], MAS: [335, 122, false],
     };
-    const edges = [["DEL","BPL",9],["BPL","NGP",6],["BPL","BOM",12],["NGP","HYD",7],["NGP","KOL",17],["HYD","BLR",11],["HYD","MAS",12],["BLR","MAS",6],["BOM","HYD",14],["BOM","BLR",20],["MAS","KOL",26]];
-    const from = el("select"), to = el("select");
-    Object.keys(nodes).forEach(n => { from.append(new Option(n, n)); to.append(new Option(n, n)); });
-    from.value = "HYD"; to.value = "DEL";
-    const find = btn("Find route");
-    head.insertBefore(from, head.children[1]); head.insertBefore(to, head.children[2]); head.insertBefore(find, head.children[3]);
+    const edges = [["DEL","BPL",9],["BPL","NGP",6],["BPL","BOM",12],["NGP","HYD",7],["NGP","KOL",17],["HYD","BLR",11],["HYD","MAS",12],["BLR","MAS",6],["BOM","HYD",14],["BOM","BLR",20],["MAS","KOL",26],["DEL","NGP",13]];
+    const mk = (label, def) => { const s = el("select"); Object.keys(nodes).forEach(n => s.append(new Option(label + n, n))); s.value = def; return s; };
+    const from = mk("From ", "BOM"), to = mk("To ", "KOL"), via = el("select");
+    via.append(new Option("Via: any", ""));
+    Object.keys(nodes).forEach(n => via.append(new Option("Via " + n, n)));
+    const acc = btn("Accessible only");
+    const find = btn("Find route", "sim-btn on");
+    const row2 = el("div", "sim-head"); row2.style.marginBottom = "4px";
+    head.append(find);
+    row2.append(from, to, via, acc);
+    body.parentNode.insertBefore(row2, body);
 
     const W = 480, H = 140;
     const svg = svgEl("svg", { viewBox: `0 0 ${W} ${H}` });
@@ -375,21 +457,25 @@ function initRail(root) {
         return { a, b, w, l };
     });
     const nodeEls = {};
-    Object.entries(nodes).forEach(([n, [x, y]]) => {
-        const c = svgEl("circle", { cx: x, cy: y, r: 6, fill: "#0c0d0e", stroke: "#d5af4d", "stroke-width": 1.5 });
-        const t = svgEl("text", { x, y: y - 10, fill: "#e3c986", "font-size": 9, "text-anchor": "middle", "font-weight": 600 });
+    Object.entries(nodes).forEach(([n, [x, y, ok]]) => {
+        const c = svgEl("circle", { cx: x, cy: y, r: 6, fill: "#14120d", stroke: ok ? "#d5af4d" : "#8f8f8f", "stroke-width": 1.5, "stroke-dasharray": ok ? "" : "2 2" });
+        const t = svgEl("text", { x, y: y - 10, fill: ok ? "#e3c986" : "#8f8f8f", "font-size": 9, "text-anchor": "middle", "font-weight": 600 });
         t.textContent = n;
         svg.append(c, t); nodeEls[n] = c;
     });
     const train = svgEl("circle", { r: 4.5, fill: "#7cd9a2", opacity: 0 });
     svg.append(train);
     body.append(svg);
-    const out = el("div", "kpis", "<div><b id='r-route' style='font-size:11px;line-height:1.7'>--</b><span>route</span></div><div><b id='r-time'>--</b><span>travel time</span></div>");
-    body.parentNode.insertBefore(out, foot);
-    const rRoute = $("#r-route", out), rTime = $("#r-time", out);
+    const out = el("div", "kpis", "<div><b class='r-route' style='font-size:11px;line-height:1.7'>--</b><span>route</span></div><div><b class='r-time'>--</b><span>travel time</span></div><div><b class='r-xfer'>--</b><span>transfers</span></div><div><b class='r-risk'>--</b><span>delay risk</span></div>");
+    const rec = el("div", "txt-row"); rec.style.marginTop = "4px"; rec.style.minHeight = "0";
+    const recT = el("div"); rec.append(el("small", null, "n8n + Gemini analysis"), recT);
+    body.parentNode.insertBefore(out, foot); body.parentNode.insertBefore(rec, foot);
+    const rRoute = $(".r-route", out), rTime = $(".r-time", out), rX = $(".r-xfer", out), rRisk = $(".r-risk", out);
 
+    let accessible = false;
     function dijkstra(s, t) {
         const dist = {}, prev = {}, todo = new Set(Object.keys(nodes));
+        const allowed = n => !accessible || nodes[n][2] || n === s || n === t;
         todo.forEach(n => dist[n] = Infinity); dist[s] = 0;
         while (todo.size) {
             let u = null; todo.forEach(n => { if (u === null || dist[n] < dist[u]) u = n; });
@@ -397,25 +483,42 @@ function initRail(root) {
             todo.delete(u); if (u === t) break;
             edges.forEach(([a, b, w]) => {
                 const v = a === u ? b : b === u ? a : null;
-                if (v && todo.has(v) && dist[u] + w < dist[v]) { dist[v] = dist[u] + w; prev[v] = u; }
+                if (v && todo.has(v) && allowed(v) && dist[u] + w < dist[v]) { dist[v] = dist[u] + w; prev[v] = u; }
             });
         }
         const path = []; for (let n = t; n; n = prev[n]) path.unshift(n);
-        return dist[t] === Infinity ? null : { path, cost: dist[t] };
+        return dist[t] === Infinity || path[0] !== s ? null : { path, cost: dist[t] };
+    }
+    function plan() {
+        if (via.value && via.value !== from.value && via.value !== to.value) {
+            const a = dijkstra(from.value, via.value), b = dijkstra(via.value, to.value);
+            if (!a || !b) return null;
+            return { path: [...a.path, ...b.path.slice(1)], cost: a.cost + b.cost };
+        }
+        return dijkstra(from.value, to.value);
     }
 
     let anim = 0;
     function route() {
-        const res = dijkstra(from.value, to.value);
+        const res = plan();
         edgeEls.forEach(e => { e.l.setAttribute("stroke", "rgba(255,255,255,.18)"); e.l.setAttribute("stroke-width", 1.4); });
-        Object.values(nodeEls).forEach(c => c.setAttribute("fill", "#0c0d0e"));
+        Object.values(nodeEls).forEach(c => c.setAttribute("fill", "#14120d"));
         cancelAnimationFrame(anim); train.setAttribute("opacity", 0);
-        if (!res || res.path.length < 2) { rRoute.textContent = "no trip"; rTime.textContent = "--"; return; }
-        rRoute.textContent = res.path.join(" → "); rTime.textContent = res.cost + " h";
+        if (!res || res.path.length < 2) {
+            rRoute.textContent = accessible ? "no step-free route" : "no route"; rTime.textContent = rX.textContent = rRisk.textContent = "--";
+            recT.textContent = accessible ? "No route uses only stations with the required accessibility facilities. Try turning the filter off or changing the via station." : "Choose two different stations.";
+            return;
+        }
+        const transfers = res.path.length - 2;
+        const risk = clamp(Math.round(5 + transfers * 8 + res.cost * 0.5), 0, 95);
+        const level = risk < 25 ? "Low" : risk < 45 ? "Medium" : "High";
+        rRoute.textContent = res.path.join(" → "); rTime.textContent = res.cost + " h"; rX.textContent = transfers;
+        rRisk.textContent = `${level} · ${risk}%`;
+        recT.textContent = level === "Low" ? "Short chain with few connections. Keep the booked plan." : level === "Medium" ? "Several connections. Allow a buffer at the longest transfer and track the first leg." : "Long chain with many connections. Consider a direct alternative or an earlier departure.";
         const pts = res.path.map(n => nodes[n]);
         const legs = pts.slice(1).map((p, i) => ({ a: pts[i], b: p, len: Math.hypot(p[0] - pts[i][0], p[1] - pts[i][1]) }));
         const total = legs.reduce((s, l) => s + l.len, 0);
-        res.path.forEach(n => nodeEls[n].setAttribute("fill", "#5f4a20"));
+        res.path.forEach(n => nodeEls[n].setAttribute("fill", "#52401b"));
         res.path.slice(1).forEach((n, i) => {
             const e = edgeEls.find(e => (e.a === res.path[i] && e.b === n) || (e.b === res.path[i] && e.a === n));
             e.l.setAttribute("stroke", "#d5af4d"); e.l.setAttribute("stroke-width", 3);
@@ -431,12 +534,12 @@ function initRail(root) {
             if (now - t0 < dur) anim = requestAnimationFrame(frame);
         })(t0);
     }
-    find.onclick = route; from.onchange = route; to.onchange = route;
+    acc.onclick = () => { accessible = !accessible; acc.classList.toggle("on", accessible); route(); };
+    find.onclick = route; from.onchange = route; to.onchange = route; via.onchange = route;
+    onDispose(() => cancelAnimationFrame(anim));
     route();
 }
 
-// ------------------------------------------------------------
-// 6. Recoverix: shipment exception -> piggyback assignment
 // ------------------------------------------------------------
 function initRecover(root) {
     const { head, body, foot } = scaffold(root, "Illustrative. The real system searches a 91-hub, 143-edge Telangana graph");
@@ -470,7 +573,10 @@ function initRecover(root) {
     const out = el("div", "chips"); out.style.margin = "6px 0 4px";
     const voice = el("span", "chip ok", "Sarvam voice call (Telugu)"), app = el("span", "chip ok", "Driver app notified");
     const kp = el("div", "kpis", "<div><b class='r-win'>--</b><span>assigned truck</span></div><div><b class='r-type' style='font-size:12px;line-height:1.6'>--</b><span>piggyback type</span></div><div><b class='r-score'>--</b><span>score</span></div>");
-    body.parentNode.insertBefore(out, foot); body.parentNode.insertBefore(kp, foot);
+    const call = el("div", "txt-row"); call.style.minHeight = "0"; call.style.marginTop = "4px";
+    call.append(el("small", null, "Sarvam voice agent (Telugu call, shown in English)"));
+    const callT = el("div"); callT.textContent = "Waiting for an assignment…"; call.append(callT);
+    body.parentNode.insertBefore(out, foot); body.parentNode.insertBefore(kp, foot); body.parentNode.insertBefore(call, foot);
     const kWin = $(".r-win", kp), kType = $(".r-type", kp), kScore = $(".r-score", kp);
 
     let spot = 0, winner = null, running = false;
@@ -479,7 +585,7 @@ function initRecover(root) {
     function place() {
         const [x, y] = hubXY(spots[spot]);
         pin.setAttribute("cx", x); pin.setAttribute("cy", y);
-        link.setAttribute("opacity", 0); winner = null; out.innerHTML = ""; kWin.textContent = kType.textContent = kScore.textContent = "--";
+        link.setAttribute("opacity", 0); winner = null; out.innerHTML = ""; callT.textContent = "Waiting for an assignment…"; kWin.textContent = kType.textContent = kScore.textContent = "--";
     }
     function evaluate(hub) {
         return trucks.map(t => {
@@ -504,7 +610,9 @@ function initRecover(root) {
         const [vx, vy] = hubs[best.via], [px, py] = hubs[hub];
         link.setAttribute("x1", vx); link.setAttribute("y1", vy); link.setAttribute("x2", px); link.setAttribute("y2", py); link.setAttribute("opacity", best.via === hub ? 0 : 1);
         await sleep(700); out.append(voice); voice.classList.add("on");
-        await sleep(800); out.append(app); app.classList.add("on");
+        callT.textContent = `Agent: Hello, this is Recoverix. Please pick up a ${weight} kg shipment at ${hub} on your route.`;
+        await sleep(1300); callT.textContent += " Driver: Confirmed.";
+        await sleep(600); out.append(app); app.classList.add("on");
         running = false;
     }
     bNew.onclick = () => { if (running) return; voice.classList.remove("on"); app.classList.remove("on"); spot = (spot + 1) % spots.length; place(); };
