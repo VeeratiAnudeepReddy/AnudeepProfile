@@ -1345,3 +1345,24 @@ hr {
     #sim-pond, #sim-privacy { height: 270px; }
     #sim-traffic, #sim-civix, #sim-rail, #sim-study { height: 340px; }
 }
+
+
+/* ===== smooth transitions ===== */
+html { scroll-behavior: smooth; }
+#real-site { animation: siteIn 1.1s cubic-bezier(.22, 1, .36, 1) both; }
+@keyframes siteIn { from { opacity: 0; transform: translateY(18px); filter: blur(8px); } to { opacity: 1; transform: none; filter: none; } }
+
+.rv { opacity: 0; }
+.rv.in { animation: rvIn .9s cubic-bezier(.22, 1, .36, 1) both; animation-delay: var(--d, 0s); }
+@keyframes rvIn { from { opacity: 0; transform: translateY(34px) scale(.98); } to { opacity: 1; transform: none; } }
+
+.project-card, .service-card, .ach-card, .tl-card, .list-card, .social-link, .btn-home1, .btn-home2, .ul-list li, .chip, .sim-btn {
+    transition: transform .45s cubic-bezier(.22, 1, .36, 1), box-shadow .45s ease, background .35s ease, color .35s ease, border-color .35s ease, opacity .35s ease;
+}
+.slide-in-left, .slide-in-right, .slide-in-up { transition: opacity 1.1s cubic-bezier(.22, 1, .36, 1), transform 1.1s cubic-bezier(.22, 1, .36, 1); }
+
+@media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .rv { opacity: 1; }
+    .rv.in, #real-site { animation: none; }
+}

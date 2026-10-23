@@ -32,6 +32,7 @@ window.addEventListener("load", () => {
             intro.style.display = "none";
             site.style.display = "block";
             initScrollAnimations(); 
+            initReveal();
         }, 1200);
     }, 3800);
 });
@@ -623,3 +624,27 @@ document.getElementById("contact-form").addEventListener("submit", e => {
     initRail($("#sim-rail"));
     initStudy($("#sim-study"));
 })();
+
+
+// ===============================
+// STAGGERED SCROLL REVEAL (cards, timeline, hero blocks)
+// ===============================
+function initReveal() {
+    const groups = [
+        ".home-section, .home-visual", ".about-text, .photo-container", ".project-card",
+        ".tl-item", ".ach-card", ".list-card", ".service-card", ".sub-title"
+    ];
+    const io = new IntersectionObserver(entries => {
+        entries.forEach(e => {
+            if (!e.isIntersecting) return;
+            e.target.classList.add("in");
+            e.target.addEventListener("animationend", () => e.target.classList.remove("rv", "in"), { once: true });
+            io.unobserve(e.target);
+        });
+    }, { threshold: 0.12, rootMargin: "0px 0px -40px 0px" });
+    groups.forEach(sel => document.querySelectorAll(sel).forEach((n, i) => {
+        n.classList.add("rv");
+        n.style.setProperty("--d", `${(i % 3) * 0.12}s`);
+        io.observe(n);
+    }));
+}
