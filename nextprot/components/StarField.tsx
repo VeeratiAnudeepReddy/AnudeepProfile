@@ -147,7 +147,7 @@ export default function StarField() {
       // the stars: a point, a soft halo on the bigger ones, and a streak while the page is scrolling
       const streak = clamp(Math.abs(scrollV), 0, 60);
       for (const p of pts) {
-        const col = p.s.rose ? "255,160,185" : "232,236,247";
+        const col = p.s.rose ? "229,196,120" : "232,236,247";
         if (!reduce && streak > 2.5) {
           const len = streak * p.s.z * 0.9;
           const dir = scrollV > 0 ? 1 : -1;               // stars slide up while scrolling down, so the streak trails below
@@ -171,9 +171,9 @@ export default function StarField() {
           ctx.lineWidth = 0.9;
           for (const { p, d } of near) {
             const a = (1 - d / reach) * 0.75;
-            ctx.strokeStyle = `rgba(255,165,190,${a.toFixed(3)})`;
+            ctx.strokeStyle = `rgba(224,190,110,${a.toFixed(3)})`;
             ctx.beginPath(); ctx.moveTo(ptr.x, ptr.y); ctx.lineTo(p.x, p.y); ctx.stroke();
-            ctx.fillStyle = `rgba(255,200,215,${(a * 0.9).toFixed(3)})`;
+            ctx.fillStyle = `rgba(240,218,160,${(a * 0.9).toFixed(3)})`;
             ctx.beginPath(); ctx.arc(p.x, p.y, p.r + 0.9, 0, 6.283); ctx.fill();
           }
           for (let i = 0; i + 1 < near.length; i++) {      // the neighbours join each other too
@@ -188,7 +188,7 @@ export default function StarField() {
         if (trail.length > 1) {
           for (let i = 1; i < trail.length; i++) {
             const age = (now - trail[i].t) / 150, a = (1 - age) * 0.3;
-            ctx.strokeStyle = `rgba(255,185,205,${a.toFixed(3)})`; ctx.lineWidth = 1.1 * (1 - age) + 0.2;
+            ctx.strokeStyle = `rgba(224,190,110,${a.toFixed(3)})`; ctx.lineWidth = 1.1 * (1 - age) + 0.2;
             ctx.beginPath(); ctx.moveTo(trail[i - 1].x, trail[i - 1].y); ctx.lineTo(trail[i].x, trail[i].y); ctx.stroke();
           }
         }
@@ -199,7 +199,7 @@ export default function StarField() {
           const k = (now - r.t0) / 900, e = 1 - Math.pow(1 - k, 3);
           ctx.strokeStyle = `rgba(235,238,248,${((1 - k) * 0.5).toFixed(3)})`; ctx.lineWidth = 1.2;
           ctx.beginPath(); ctx.arc(r.x, r.y, 8 + e * 180, 0, 6.283); ctx.stroke();
-          ctx.strokeStyle = `rgba(255,120,155,${((1 - k) * 0.35).toFixed(3)})`;
+          ctx.strokeStyle = `rgba(213,175,77,${((1 - k) * 0.35).toFixed(3)})`;
           ctx.beginPath(); ctx.arc(r.x, r.y, 4 + e * 120, 0, 6.283); ctx.stroke();
         }
       }
