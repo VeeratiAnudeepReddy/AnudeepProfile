@@ -92,10 +92,9 @@ export const projects: {
   },
 ];
 
-/** The numbers at the top of the page: entrance exams, grades and wins. */
+/** The numbers at the top of the page: entrance rank, grades and wins. */
 export const stats = [
   { value: "1818", suffix: "", label: "EAMCET rank", plain: "1818" },
-  { value: "97.87", suffix: "", label: "JEE Main percentile", plain: "97.87" },
   { value: "9.37", suffix: "", label: "CGPA out of 10, B.Tech CSE at VNRVJIET", plain: "9.37" },
   { value: "4", suffix: "×", label: "Hackathon wins", plain: "4×" },
 ];
