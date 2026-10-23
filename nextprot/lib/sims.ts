@@ -64,9 +64,9 @@ function initPond(root) {
 
     const svg = svgEl("svg", { viewBox: `0 0 ${W} ${H}` });
     rows.forEach((r, i) => {
-        r.path = svgEl("polyline", { fill: "none", stroke: "#d24b64", "stroke-width": 1.8, "stroke-linejoin": "round" });
+        r.path = svgEl("polyline", { fill: "none", stroke: "#d5af4d", "stroke-width": 1.8, "stroke-linejoin": "round" });
         r.fore = svgEl("polyline", { fill: "none", stroke: "#7cd9a2", "stroke-width": 1.4, "stroke-dasharray": "4 3", opacity: 0 });
-        r.label = svgEl("text", { x: 2, y: i * RH + 15, fill: "#e08297", "font-size": 11, "font-weight": 600 });
+        r.label = svgEl("text", { x: 2, y: i * RH + 15, fill: "#e3c986", "font-size": 11, "font-weight": 600 });
         r.val = svgEl("text", { x: 2, y: i * RH + 31, fill: "#d1d1d1", "font-size": 11 });
         svg.append(svgEl("line", { x1: X0, x2: W, y1: i * RH + RH - 2, y2: i * RH + RH - 2, stroke: "rgba(255,255,255,.07)" }), r.path, r.fore, r.label, r.val);
     });
@@ -254,19 +254,19 @@ function initTraffic(root) {
 
     function drawScene() {
         ctx.clearRect(0, 0, 480, 200);
-        ctx.fillStyle = "#16090f"; ctx.fillRect(0, 88, 480, 24); ctx.fillRect(228, 0, 24, 200);
+        ctx.fillStyle = "#121315"; ctx.fillRect(0, 88, 480, 24); ctx.fillRect(228, 0, 24, 200);
         ctx.setLineDash([8, 8]); ctx.strokeStyle = "rgba(255,255,255,.18)"; ctx.lineWidth = 1;
         ctx.beginPath(); ctx.moveTo(0, 100); ctx.lineTo(228, 100); ctx.moveTo(252, 100); ctx.lineTo(480, 100);
         ctx.moveTo(240, 0); ctx.lineTo(240, 88); ctx.moveTo(240, 112); ctx.lineTo(240, 200); ctx.stroke(); ctx.setLineDash([]);
         approaches.forEach((a, i) => {
             const green = sim.phase === "green" && sim.axis === a.axis;
-            ctx.fillStyle = green ? "#7cd9a2" : "#d24b64";
+            ctx.fillStyle = green ? "#7cd9a2" : "#d5af4d";
             ctx.shadowColor = ctx.fillStyle; ctx.shadowBlur = 8;
             const pos = [[222, 109], [258, 91], [231, 82], [249, 118]][i];
             ctx.beginPath(); ctx.arc(pos[0], pos[1], 3.5, 0, 7); ctx.fill();
             ctx.shadowBlur = 0;
             sim.cars[i].forEach(c => {
-                ctx.fillStyle = c.moving || c.d <= 0 ? "#e08297" : "#d24b64";
+                ctx.fillStyle = c.moving || c.d <= 0 ? "#e3c986" : "#d5af4d";
                 if (i === 0) ctx.fillRect(a.stop - c.d - 10, 103, 10, 6);
                 if (i === 1) ctx.fillRect(a.stop + c.d, 91, 10, 6);
                 if (i === 2) ctx.fillRect(231, a.stop - c.d - 10, 6, 10);
@@ -310,7 +310,7 @@ function initCivix(root) {
     const svg = svgEl("svg", { viewBox: `0 0 ${W} ${H}` });
     svg.style.cursor = "crosshair";
     svg.append(svgEl("rect", { width: W, height: H, fill: "rgba(0,0,0,.25)" }));
-    roads.forEach(r => svg.append(svgEl("line", { x1: r[0], y1: r[1], x2: r[2], y2: r[3], stroke: "#2a0f1a", "stroke-width": 14, "stroke-linecap": "round" }),
+    roads.forEach(r => svg.append(svgEl("line", { x1: r[0], y1: r[1], x2: r[2], y2: r[3], stroke: "#212326", "stroke-width": 14, "stroke-linecap": "round" }),
         svgEl("line", { x1: r[0], y1: r[1], x2: r[2], y2: r[3], stroke: "rgba(255,255,255,.14)", "stroke-width": 1, "stroke-dasharray": "5 5" })));
     const hint = svgEl("text", { x: W / 2, y: 120, fill: "#8f8f8f", "font-size": 10, "text-anchor": "middle" });
     hint.textContent = "Click the map to file a report";
@@ -334,15 +334,15 @@ function initCivix(root) {
         if (x < 0 || y < 0 || x > W || y > H) return;
         const lat = (17.43 - (y / H) * 0.05).toFixed(4), lng = (78.43 + (x / W) * 0.08).toFixed(4);
         cGps.textContent = `${lat}°N ${lng}°E`;
-        cSt.textContent = "checking…"; cSt.style.color = "#e08297";
-        const pin = svgEl("circle", { cx: x, cy: y, r: 5, fill: "#e08297", stroke: "#fff", "stroke-width": 1 });
+        cSt.textContent = "checking…"; cSt.style.color = "#e3c986";
+        const pin = svgEl("circle", { cx: x, cy: y, r: 5, fill: "#e3c986", stroke: "#fff", "stroke-width": 1 });
         pins.append(pin); total++;
         await sleep(750);
         const ok = roads.some(rd => dist(x, y, rd) <= 11);
-        pin.setAttribute("fill", ok ? "#7cd9a2" : "#d24b64");
+        pin.setAttribute("fill", ok ? "#7cd9a2" : "#d5af4d");
         if (ok) valid++;
         cSt.textContent = ok ? `✓ ${cat.value}` : "✕ Not on road";
-        cSt.style.color = ok ? "#7cd9a2" : "#d24b64";
+        cSt.style.color = ok ? "#7cd9a2" : "#d5af4d";
         cN.textContent = `${valid} / ${total}`;
         while (pins.children.length > 12) pins.firstChild.remove();
     });
@@ -376,8 +376,8 @@ function initRail(root) {
     });
     const nodeEls = {};
     Object.entries(nodes).forEach(([n, [x, y]]) => {
-        const c = svgEl("circle", { cx: x, cy: y, r: 6, fill: "#100509", stroke: "#d24b64", "stroke-width": 1.5 });
-        const t = svgEl("text", { x, y: y - 10, fill: "#e08297", "font-size": 9, "text-anchor": "middle", "font-weight": 600 });
+        const c = svgEl("circle", { cx: x, cy: y, r: 6, fill: "#0c0d0e", stroke: "#d5af4d", "stroke-width": 1.5 });
+        const t = svgEl("text", { x, y: y - 10, fill: "#e3c986", "font-size": 9, "text-anchor": "middle", "font-weight": 600 });
         t.textContent = n;
         svg.append(c, t); nodeEls[n] = c;
     });
@@ -408,17 +408,17 @@ function initRail(root) {
     function route() {
         const res = dijkstra(from.value, to.value);
         edgeEls.forEach(e => { e.l.setAttribute("stroke", "rgba(255,255,255,.18)"); e.l.setAttribute("stroke-width", 1.4); });
-        Object.values(nodeEls).forEach(c => c.setAttribute("fill", "#100509"));
+        Object.values(nodeEls).forEach(c => c.setAttribute("fill", "#0c0d0e"));
         cancelAnimationFrame(anim); train.setAttribute("opacity", 0);
         if (!res || res.path.length < 2) { rRoute.textContent = "no trip"; rTime.textContent = "--"; return; }
         rRoute.textContent = res.path.join(" → "); rTime.textContent = res.cost + " h";
         const pts = res.path.map(n => nodes[n]);
         const legs = pts.slice(1).map((p, i) => ({ a: pts[i], b: p, len: Math.hypot(p[0] - pts[i][0], p[1] - pts[i][1]) }));
         const total = legs.reduce((s, l) => s + l.len, 0);
-        res.path.forEach(n => nodeEls[n].setAttribute("fill", "#642130"));
+        res.path.forEach(n => nodeEls[n].setAttribute("fill", "#5f4a20"));
         res.path.slice(1).forEach((n, i) => {
             const e = edgeEls.find(e => (e.a === res.path[i] && e.b === n) || (e.b === res.path[i] && e.a === n));
-            e.l.setAttribute("stroke", "#d24b64"); e.l.setAttribute("stroke-width", 3);
+            e.l.setAttribute("stroke", "#d5af4d"); e.l.setAttribute("stroke-width", 3);
         });
         train.setAttribute("opacity", 1);
         const t0 = performance.now(), dur = 600 + total * 9;
@@ -447,7 +447,7 @@ function initRecover(root) {
     const hubs = { NZB: [150, 24], KNR: [275, 22], WGL: [385, 38], SRD: [120, 78], HYD: [250, 72], KMM: [395, 96], MBN: [185, 112], NLG: [320, 112] };
     const edges = [["NZB","KNR"],["KNR","WGL"],["KNR","HYD"],["NZB","SRD"],["SRD","HYD"],["HYD","WGL"],["HYD","MBN"],["HYD","NLG"],["NLG","KMM"],["WGL","KMM"]];
     const trucks = [
-        { id: "T1", color: "#e08297", route: ["NZB", "KNR", "HYD", "NLG", "KMM"], free: 40 },
+        { id: "T1", color: "#e3c986", route: ["NZB", "KNR", "HYD", "NLG", "KMM"], free: 40 },
         { id: "T2", color: "#7cd9a2", route: ["SRD", "HYD", "WGL"], free: 15 },
         { id: "T3", color: "#ffd479", route: ["MBN", "HYD", "NLG"], free: 60 },
     ];
@@ -458,11 +458,11 @@ function initRecover(root) {
     const svg = svgEl("svg", { viewBox: `0 0 ${W} ${H}` });
     edges.forEach(([a, b]) => svg.append(svgEl("line", { x1: hubs[a][0], y1: hubs[a][1], x2: hubs[b][0], y2: hubs[b][1], stroke: "rgba(255,255,255,.16)", "stroke-width": 1.4 })));
     Object.entries(hubs).forEach(([n, [x, y]]) => {
-        svg.append(svgEl("circle", { cx: x, cy: y, r: 4, fill: "#100509", stroke: "#8f8f8f" }));
+        svg.append(svgEl("circle", { cx: x, cy: y, r: 4, fill: "#0c0d0e", stroke: "#8f8f8f" }));
         const t = svgEl("text", { x, y: y + 13, fill: "#8f8f8f", "font-size": 8, "text-anchor": "middle" }); t.textContent = n; svg.append(t);
     });
     const link = svgEl("line", { stroke: "#7cd9a2", "stroke-width": 1.6, "stroke-dasharray": "4 3", opacity: 0 });
-    const pin = svgEl("circle", { r: 6, fill: "#d24b64", stroke: "#fff", "stroke-width": 1.2 });
+    const pin = svgEl("circle", { r: 6, fill: "#d5af4d", stroke: "#fff", "stroke-width": 1.2 });
     svg.append(link, pin);
     const dots = trucks.map(t => { const c = svgEl("circle", { r: 4, fill: t.color }); svg.append(c); return c; });
     body.append(svg);

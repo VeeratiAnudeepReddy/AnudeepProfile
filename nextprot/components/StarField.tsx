@@ -181,7 +181,7 @@ export default function StarField() {
             if (d < link * 1.3) { ctx.strokeStyle = "rgba(235,238,248,.22)"; ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke(); }
           }
           const g = ctx.createRadialGradient(ptr.x, ptr.y, 0, ptr.x, ptr.y, 54);
-          g.addColorStop(0, "rgba(226, 139, 165, .24)"); g.addColorStop(1, "rgba(226, 139, 165, 0)");
+          g.addColorStop(0, "rgba(229, 205, 143, .24)"); g.addColorStop(1, "rgba(229, 205, 143, 0)");
           ctx.fillStyle = g; ctx.beginPath(); ctx.arc(ptr.x, ptr.y, 54, 0, 6.283); ctx.fill();
         }
         while (trail.length && now - trail[0].t > 150) trail.shift();

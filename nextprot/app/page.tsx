@@ -1,5 +1,6 @@
 import Intro from "@/components/Intro";
 import Dock from "@/components/Dock";
+import TopActions from "@/components/TopActions";
 import Effects from "@/components/Effects";
 import Hero from "@/components/Hero";
 import Proof from "@/components/Proof";
@@ -17,6 +18,7 @@ export default function Page() {
       <div className="grid-bg" aria-hidden="true" />
       <Effects />
       <Dock />
+      <TopActions />
       <div id="real-site">
         <main>
           <Hero />

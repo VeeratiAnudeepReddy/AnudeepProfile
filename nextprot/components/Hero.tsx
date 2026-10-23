@@ -24,11 +24,7 @@ export default function Hero() {
             <p>I build full-stack software end to end, from polished web and mobile interfaces to the APIs, data models and algorithms that power them.</p>
             <p>I turn complex problems into products people use, and I have taken one idea all the way to a patent application.</p>
           </div>
-          <div className="hero-actions hero-load" style={d(560)}>
-            <a className="btn-solid" href={`mailto:${profile.email}`} data-magnetic><i className="fa-solid fa-arrow-right" /> Hire me</a>
-            <a className="btn-ghost" href={profile.resume} download data-magnetic><i className="fa-solid fa-download" /> Download CV</a>
-          </div>
-          <div className="hero-follow hero-load" style={d(640)}>
+          <div className="hero-follow hero-load" style={d(560)}>
             <span>Find me on</span>
             <a href={profile.github} target="_blank" rel="noopener" aria-label="GitHub"><i className="fa-brands fa-github" /></a>
             <a href={profile.linkedin} target="_blank" rel="noopener" aria-label="LinkedIn"><i className="fa-brands fa-linkedin" /></a>
