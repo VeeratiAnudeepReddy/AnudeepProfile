@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef } from "react";
+import { isReduced } from "@/lib/motion";
 
 type Star = { x: number; y: number; vx: number; vy: number; ox: number; oy: number; ovx: number; ovy: number; r: number; z: number; ph: number; period: number; rose: boolean; born: number; life: number };
 type Ring = { x: number; y: number; t0: number };
@@ -24,7 +25,9 @@ export default function StarField() {
     const ctx = cv.getContext("2d")!;
     const hero = cv.closest(".hero") as HTMLElement;
     let visible = true;
-    const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    let reduce = isReduced();
+    const onMotion = () => { reduce = isReduced(); };
+    window.addEventListener("motionchange", onMotion);
     const coarse = matchMedia("(pointer: coarse)").matches;
 
     let w = 0, h = 0, dpr = 1, raf = 0, last = 0, stars: Star[] = [];
@@ -273,6 +276,7 @@ export default function StarField() {
     return () => {
       cancelAnimationFrame(raf);
       clearTimeout(releaseTimer);
+      window.removeEventListener("motionchange", onMotion);
       ro.disconnect(); io.disconnect();
       removeEventListener("pointermove", onMove);
       removeEventListener("pointerdown", onDown);

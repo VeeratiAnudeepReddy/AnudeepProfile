@@ -187,8 +187,8 @@ html:not(.js) #intro { display: none; }
 .dock-item:hover .dock-label, .dock-item:focus-visible .dock-label { opacity: 1; transform: translate(-50%, 0); }
 
 /* ---------- reveal language: everything arrives from the sides ---------- */
-@media (prefers-reduced-motion: no-preference) {
-  .js [data-reveal] {
+
+html.js:not([data-motion="reduced"]) [data-reveal] {
     opacity: 0; filter: blur(6px);
     transition:
       opacity 900ms var(--ease-out) var(--d, 0ms),
@@ -196,44 +196,36 @@ html:not(.js) #intro { display: none; }
       filter 900ms ease var(--d, 0ms),
       border-color 300ms ease, box-shadow 300ms ease, background-color 300ms ease;
   }
-  .js [data-reveal="left"] { transform: translate3d(calc(var(--side) * -1), 0, 0); }
-  .js [data-reveal="right"] { transform: translate3d(var(--side), 0, 0); }
-  .js [data-reveal="up"] { transform: translate3d(0, 44px, 0); }
-  .js [data-reveal="pop"] { transform: scale(.9); }
-  .js [data-reveal].is-in { opacity: 1; filter: none; transform: none; }
-
-  /* headline lines rise out of a mask, the way a title is set */
-  .js .sec-title .mask > span { transform: translateY(112%); transition: transform 1000ms var(--ease-expo) calc(var(--i, 0) * 90ms); }
-  .js .sec-title.is-in .mask > span { transform: none; }
-  .js .kicker::after { transform: scaleX(0); transform-origin: 0 50%; transition: transform 900ms var(--ease-expo) 250ms; }
-  .js .is-in .kicker::after, .js .kicker.is-in::after { transform: scaleX(1); }
-
-  /* the children of a card arrive after it, from the same side */
-  .js [data-reveal] .cascade > * { opacity: 0; transform: translateX(var(--cx, -24px)); transition: opacity 600ms var(--ease-out), transform 800ms var(--ease-expo); }
-  .js [data-reveal="right"] .cascade > * { --cx: 24px; }
-  .js [data-reveal].is-in .cascade > * { opacity: 1; transform: none; transition-delay: calc(480ms + var(--k, 0) * 75ms); }
-  .js [data-reveal] .pop-in > * { opacity: 0; transform: translateY(10px) scale(.88); transition: opacity 500ms ease, transform 700ms var(--ease-expo); }
-  .js [data-reveal].is-in .pop-in > * { opacity: 1; transform: none; transition-delay: calc(620ms + var(--k, 0) * 40ms); }
-  .js [data-reveal] .spin-in { transform: scale(.3) rotate(-140deg); opacity: 0; transition: transform 1000ms var(--ease-expo) calc(var(--d, 0ms) + 260ms), opacity 500ms ease calc(var(--d, 0ms) + 260ms); }
-  .js [data-reveal].is-in .spin-in { transform: none; opacity: 1; }
-
-  /* hero load sequence (starts when the intro curtain lifts) */
-  .js .hero-load { opacity: 0; transform: translateY(18px); }
-  .js.ready .hero-load { animation: load-rise 800ms var(--ease-out) forwards; animation-delay: var(--d, 0ms); }
-  .js .hero h1 .mask > span { transform: translateY(108%); }
-  .js.ready .hero h1 .mask > span { animation: line-up 1100ms var(--ease-expo) forwards; animation-delay: calc(80ms + var(--i, 0) * 100ms); }
-  .js .hero-visual { opacity: 0; transform: translate3d(var(--side), 0, 0) scale(.96); }
-  .js.ready .hero-visual { animation: load-card 1300ms var(--ease-expo) 300ms forwards; }
-  .js .dock { transform: translate(-50%, 160%); }
-  .js.ready .dock { transform: translate(-50%, 0); transition: transform 1000ms var(--ease-expo) 700ms; }
-
-  /* section-level scroll motion */
-  @supports (animation-timeline: view()) {
+html.js:not([data-motion="reduced"]) [data-reveal="left"] { transform: translate3d(calc(var(--side) * -1), 0, 0); }
+html.js:not([data-motion="reduced"]) [data-reveal="right"] { transform: translate3d(var(--side), 0, 0); }
+html.js:not([data-motion="reduced"]) [data-reveal="up"] { transform: translate3d(0, 44px, 0); }
+html.js:not([data-motion="reduced"]) [data-reveal="pop"] { transform: scale(.9); }
+html.js:not([data-motion="reduced"]) [data-reveal].is-in { opacity: 1; filter: none; transform: none; }
+html.js:not([data-motion="reduced"]) .sec-title .mask > span{ transform: translateY(112%); transition: transform 1000ms var(--ease-expo) calc(var(--i, 0) * 90ms); }
+html.js:not([data-motion="reduced"]) .sec-title.is-in .mask > span { transform: none; }
+html.js:not([data-motion="reduced"]) .kicker::after { transform: scaleX(0); transform-origin: 0 50%; transition: transform 900ms var(--ease-expo) 250ms; }
+html.js:not([data-motion="reduced"]) .is-in .kicker::after,html.js:not([data-motion="reduced"]) .kicker.is-in::after { transform: scaleX(1); }
+html.js:not([data-motion="reduced"]) [data-reveal] .cascade > *{ opacity: 0; transform: translateX(var(--cx, -24px)); transition: opacity 600ms var(--ease-out), transform 800ms var(--ease-expo); }
+html.js:not([data-motion="reduced"]) [data-reveal="right"] .cascade > * { --cx: 24px; }
+html.js:not([data-motion="reduced"]) [data-reveal].is-in .cascade > * { opacity: 1; transform: none; transition-delay: calc(480ms + var(--k, 0) * 75ms); }
+html.js:not([data-motion="reduced"]) [data-reveal] .pop-in > * { opacity: 0; transform: translateY(10px) scale(.88); transition: opacity 500ms ease, transform 700ms var(--ease-expo); }
+html.js:not([data-motion="reduced"]) [data-reveal].is-in .pop-in > * { opacity: 1; transform: none; transition-delay: calc(620ms + var(--k, 0) * 40ms); }
+html.js:not([data-motion="reduced"]) [data-reveal] .spin-in { transform: scale(.3) rotate(-140deg); opacity: 0; transition: transform 1000ms var(--ease-expo) calc(var(--d, 0ms) + 260ms), opacity 500ms ease calc(var(--d, 0ms) + 260ms); }
+html.js:not([data-motion="reduced"]) [data-reveal].is-in .spin-in { transform: none; opacity: 1; }
+html.js:not([data-motion="reduced"]) .hero-load{ opacity: 0; transform: translateY(18px); }
+html.js.ready:not([data-motion="reduced"]) .hero-load { animation: load-rise 800ms var(--ease-out) forwards; animation-delay: var(--d, 0ms); }
+html.js:not([data-motion="reduced"]) .hero h1 .mask > span { transform: translateY(108%); }
+html.js.ready:not([data-motion="reduced"]) .hero h1 .mask > span { animation: line-up 1100ms var(--ease-expo) forwards; animation-delay: calc(80ms + var(--i, 0) * 100ms); }
+html.js:not([data-motion="reduced"]) .hero-visual { opacity: 0; transform: translate3d(var(--side), 0, 0) scale(.96); }
+html.js.ready:not([data-motion="reduced"]) .hero-visual { animation: load-card 1300ms var(--ease-expo) 300ms forwards; }
+html.js:not([data-motion="reduced"]) .dock { transform: translate(-50%, 160%); }
+html.js.ready:not([data-motion="reduced"]) .dock { transform: translate(-50%, 0); transition: transform 1000ms var(--ease-expo) 700ms; }
+html:not([data-motion="reduced"]) @supports (animation-timeline: view()){
     .hero-copy { animation: hero-lift linear both; animation-timeline: view(); animation-range: exit 0% exit 80%; }
     .is-filling > span { display: inline-block; color: rgba(255, 255, 255, .42); animation: ink-fill linear both; animation-timeline: view(); animation-range: cover 18% cover 42%; }
     .tl-spine { transform: scaleY(0); animation: draw-y linear both; animation-timeline: view(); animation-range: entry 20% cover 60%; }
   }
-}
+
 @keyframes load-rise { to { opacity: 1; transform: none; } }
 @keyframes load-card { to { opacity: 1; transform: none; } }
 @keyframes line-up { to { transform: none; } }
@@ -552,10 +544,10 @@ html:not(.js) #intro { display: none; }
 .roll__sym, .roll em { font-variant-numeric: proportional-nums; }
 .roll__sym::before, .roll em::before { content: attr(data-ch); }
 .roll em { font-style: normal; color: var(--rose); }
-@media (prefers-reduced-motion: no-preference) {
-  .roll:not(.is-in) .roll__strip { transform: none; }
-  .roll.is-in .roll__strip { transition: transform 1500ms var(--ease-expo) calc(var(--i) * 90ms); }
-}
+
+html:not([data-motion="reduced"]) .roll:not(.is-in) .roll__strip { transform: none; }
+html:not([data-motion="reduced"]) .roll.is-in .roll__strip { transition: transform 1500ms var(--ease-expo) calc(var(--i) * 90ms); }
+
 
 /* ---------- proof strip ---------- */
 .proof { padding-block: 0 var(--section-y); position: relative; z-index: 1; }
@@ -619,7 +611,8 @@ html:not(.js) #intro { display: none; }
   transition: opacity var(--t-hover) ease, transform 300ms var(--ease-out);
 }
 .proj-map__node:hover .proj-map__tip, .proj-map__node:focus-visible .proj-map__tip { opacity: 1; transform: translate(-50%, calc(-100% - 16px)) scale(1); }
-@media (prefers-reduced-motion: reduce) { .proj-map__node.now::after { animation: none; } }
+
+html[data-motion="reduced"] .proj-map__node.now::after { animation: none; } 
 @media (max-width: 900px) {
   .proj-map { left: 14px; }
   .proj { padding-left: 46px; }
@@ -740,7 +733,8 @@ html:not(.js) #intro { display: none; }
 @keyframes flow-run { to { top: 100%; } }
 .stack-row:nth-child(2) .flow::after { animation-delay: .5s; } .stack-row:nth-child(3) .flow::after { animation-delay: 1s; } .stack-row:nth-child(4) .flow::after { animation-delay: 1.5s; }
 
-@media (prefers-reduced-motion: reduce) { .flow::after { animation: none; display: none; } }
+
+html[data-motion="reduced"] .flow::after { animation: none; display: none; } 
 
 /* ---------- contact ---------- */
 .contact-title { font-weight: 800; font-size: var(--step-display); line-height: .92; letter-spacing: -0.055em; color: #fff; margin-bottom: 26px; text-wrap: balance; }
@@ -814,17 +808,16 @@ html:not(.js) #intro { display: none; }
   .proj-sim .sim { min-height: 350px; }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .hero-name__first, .hero-name__rest { animation: none; background-position: 50% 0; }
-  /* gentler, not frozen: blocks fade in place instead of travelling */
-  .js [data-reveal] { opacity: 0; transition: opacity 900ms ease var(--d, 0ms); }
-  .js [data-reveal].is-in { opacity: 1; }
-  html { scroll-behavior: auto; }
-  .marquee-track, .mono, .patent::before, .status::before { animation: none; }
-  .progress { display: none; }
-  [data-tilt] { transform: none; }
-  #intro.leaving { animation-duration: 1ms; }
-}
+
+html[data-motion="reduced"] .hero-name__first,html[data-motion="reduced"] .hero-name__rest { animation: none; background-position: 50% 0; }
+html.js[data-motion="reduced"] [data-reveal]{ opacity: 0; transition: opacity 900ms ease var(--d, 0ms); }
+html.js[data-motion="reduced"] [data-reveal].is-in { opacity: 1; }
+html[data-motion="reduced"] { scroll-behavior: auto; }
+html[data-motion="reduced"] .marquee-track,html[data-motion="reduced"] .mono,html[data-motion="reduced"] .patent::before,html[data-motion="reduced"] .status::before { animation: none; }
+html[data-motion="reduced"] .progress { display: none; }
+html[data-motion="reduced"] [data-tilt] { transform: none; }
+html[data-motion="reduced"] #intro.leaving { animation-duration: 1ms; }
+
 
 /* ---------- simulation panels ---------- */
 /* ===== simulation panels (replace the template's screenshots) ===== */
@@ -909,3 +902,93 @@ html:not(.js) #intro { display: none; }
 .stat b, .edu h3, .layer-id h3, .win h4, .proj-body h3, .tl-head h3, .patent h3, .item h4, .hv-caption strong, .skill-panel__head h3, .group-title h3, .focus li h3 { letter-spacing: -0.01em; }
 .contact-title { line-height: 1; }
 body { letter-spacing: 0; }
+
+/* ---------- motion switch ---------- */
+.dock-sep { align-self: stretch; width: 1px; margin: 6px 3px; background: var(--line); }
+.dock-motion { cursor: pointer; font: inherit; }
+.motion-hint {
+  position: fixed; left: 50%; bottom: 104px; z-index: 1200; transform: translateX(-50%); width: min(420px, calc(100vw - 24px)); padding: 18px 20px; border-radius: 20px;
+  background: rgba(20, 7, 13, .94); backdrop-filter: blur(16px); border: 1px solid var(--line-hot); box-shadow: 0 24px 60px -20px rgba(0, 0, 0, .9), 0 0 40px -10px rgba(255, 77, 109, .5);
+  animation: hint-in 600ms var(--ease-expo) both;
+}
+.motion-hint p { font-size: var(--step-small); color: #e6e8ee; margin-bottom: 14px; line-height: 1.5; }
+.motion-hint div { display: flex; flex-wrap: wrap; gap: 10px; }
+.motion-hint .btn-solid, .motion-hint .btn-ghost { padding: 9px 16px; font-size: .86rem; }
+@keyframes hint-in { from { opacity: 0; transform: translate(-50%, 16px); } }
+
+
+/* =====================================================================
+   MORE MOTION (full motion only; the reduced mode keeps the still versions)
+   ===================================================================== */
+
+/* the silver grid lights up around the pointer */
+.grid-bg::after {
+  content: ""; position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(226, 231, 240, .5) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(226, 231, 240, .5) 1px, transparent 1px);
+  background-size: 72px 72px;
+  -webkit-mask-image: radial-gradient(260px circle at var(--px, -400px) var(--py, -400px), #000, transparent 100%);
+          mask-image: radial-gradient(260px circle at var(--px, -400px) var(--py, -400px), #000, transparent 100%);
+}
+html[data-motion="reduced"] .grid-bg::after { opacity: .5; }
+@media (hover: none) { .grid-bg::after { display: none; } }
+
+/* trailing aura */
+.aura {
+  position: fixed; left: 0; top: 0; z-index: 3500; width: 38px; height: 38px; margin: -19px 0 0 -19px; border-radius: 50%; pointer-events: none; opacity: 0;
+  border: 1.5px solid rgba(255, 157, 179, .7); background: radial-gradient(circle, rgba(255, 110, 145, .22), transparent 70%);
+  box-shadow: 0 0 24px rgba(255, 77, 109, .35); mix-blend-mode: screen;
+  transition: opacity 300ms ease, width 300ms var(--ease-out), height 300ms var(--ease-out), margin 300ms var(--ease-out), background 300ms ease, border-color 300ms ease;
+}
+.aura.hot { width: 64px; height: 64px; margin: -32px 0 0 -32px; background: radial-gradient(circle, rgba(255, 110, 145, .3), transparent 70%); border-color: rgba(255, 255, 255, .8); }
+.aura.press { width: 26px; height: 26px; margin: -13px 0 0 -13px; }
+@media (hover: none) { .aura { display: none; } }
+
+/* aurora behind the hero */
+.aurora { position: absolute; inset: -10% -5% 0; z-index: 0; pointer-events: none; overflow: hidden; }
+.aurora i { position: absolute; border-radius: 50%; filter: blur(90px); opacity: .55; will-change: transform; }
+.aurora i:nth-child(1) { width: 46vw; height: 46vw; left: -8vw; top: -12vw; background: radial-gradient(circle, rgba(255, 77, 109, .55), transparent 65%); animation: aurora-a 22s ease-in-out infinite; }
+.aurora i:nth-child(2) { width: 38vw; height: 38vw; right: -6vw; top: 6vw; background: radial-gradient(circle, rgba(122, 12, 46, .75), transparent 65%); animation: aurora-b 26s ease-in-out infinite; }
+.aurora i:nth-child(3) { width: 30vw; height: 30vw; left: 38vw; top: 24vw; background: radial-gradient(circle, rgba(223, 228, 238, .18), transparent 65%); animation: aurora-c 30s ease-in-out infinite; }
+@keyframes aurora-a { 50% { transform: translate3d(9vw, 6vw, 0) scale(1.15); } }
+@keyframes aurora-b { 50% { transform: translate3d(-8vw, 9vw, 0) scale(1.2); } }
+@keyframes aurora-c { 50% { transform: translate3d(-12vw, -5vw, 0) scale(.85); } }
+html[data-motion="reduced"] .aurora i { animation: none; }
+
+/* depth: the headline lines and the portrait drift against the pointer */
+html[data-motion="full"] .hero h1 .mask > span { translate: calc(var(--nx, 0) * -7px * (var(--i, 0) + 1)) calc(var(--ny, 0) * -3px * (var(--i, 0) + 1)); transition: translate 500ms var(--ease-out); }
+html[data-motion="full"] .hero-name { translate: calc(var(--nx, 0) * -5px) calc(var(--ny, 0) * -2px); transition: translate 500ms var(--ease-out); }
+html[data-motion="full"] .avatar { translate: calc(var(--nx, 0) * 8px) calc(var(--ny, 0) * 6px); transition: translate 500ms var(--ease-out); }
+
+/* cards light up as they land */
+html[data-motion="full"] .glass[data-reveal].is-in { animation: land-glow 1500ms var(--ease-out) both; animation-delay: calc(var(--d, 0ms) + 500ms); }
+@keyframes land-glow {
+  0% { border-color: rgba(255, 140, 170, .9); box-shadow: 0 0 0 1px rgba(255, 110, 145, .5), 0 0 46px rgba(255, 77, 109, .5); }
+  100% { border-color: var(--line); box-shadow: 0 1px 0 rgba(255, 255, 255, .06) inset, 0 24px 60px -30px rgba(0, 0, 0, .7); }
+}
+
+/* scroll-linked depth: the simulation panels and the stories drift at different speeds */
+@supports (animation-timeline: view()) {
+  html[data-motion="full"] .proj-sim { animation: depth-a linear both; animation-timeline: view(); animation-range: cover 0% cover 100%; }
+  html[data-motion="full"] .proj-body { animation: depth-b linear both; animation-timeline: view(); animation-range: cover 0% cover 100%; }
+  html[data-motion="full"] .sec-head { animation: head-drift linear both; animation-timeline: view(); animation-range: exit 0% exit 100%; }
+  html[data-motion="full"] .avatar::after { content: ""; position: absolute; inset: 4px; border-radius: 50%; box-shadow: inset 0 0 30px rgba(255, 77, 109, .25); pointer-events: none; }
+}
+@keyframes depth-a { from { translate: 0 46px; } to { translate: 0 -46px; } }
+@keyframes depth-b { from { translate: 0 -22px; } to { translate: 0 22px; } }
+@keyframes head-drift { to { translate: -40px -30px; opacity: .25; } }
+
+/* press feedback and a travelling sheen on the primary button */
+.btn-solid:active, .btn-ghost:active { transform: scale(.96); }
+html[data-motion="full"] .btn-solid { animation: btn-breathe 3.6s ease-in-out infinite; }
+@keyframes btn-breathe { 50% { box-shadow: 0 14px 40px -8px rgba(255, 77, 109, .95); } }
+
+/* dock: the active icon has a slow halo */
+html[data-motion="full"] .dock-item.active { animation: dock-halo 3s ease-in-out infinite; }
+@keyframes dock-halo { 50% { box-shadow: 0 10px 34px -6px rgba(255, 77, 109, 1); } }
+
+/* proof numbers glow while they count */
+html[data-motion="full"] .stat b { background: linear-gradient(100deg, #fff 40%, #ff9db3 50%, #fff 60%); background-size: 260% 100%; -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; animation: num-sheen 5s ease-in-out infinite; }
+@keyframes num-sheen { 0%, 100% { background-position: 100% 0; } 50% { background-position: 0 0; } }
+html[data-motion="full"] .stat b .roll em { -webkit-text-fill-color: var(--rose); }

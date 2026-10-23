@@ -1,6 +1,8 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { nav } from "@/lib/content";
+import { isReduced } from "@/lib/motion";
+import MotionSwitch from "./MotionSwitch";
 
 const BASE = 46;        // resting size of an icon, px
 const PEAK = 86;        // size of the icon right under the pointer
@@ -26,7 +28,6 @@ export default function Dock() {
   useEffect(() => {
     const dock = dockRef.current;
     if (!dock || !matchMedia("(hover: hover) and (pointer: fine)").matches) return;
-    const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
     const sizes = nav.map(() => BASE);
     let mouseX: number | null = null, raf = 0;
 
@@ -39,7 +40,7 @@ export default function Dock() {
           const r = el.getBoundingClientRect(), c = r.left + r.width / 2;
           target = BASE + (PEAK - BASE) * Math.exp(-((mouseX - c) ** 2) / (2 * SIGMA * SIGMA));
         }
-        sizes[i] += (target - sizes[i]) * (reduce ? 1 : 0.22);
+        sizes[i] += (target - sizes[i]) * (isReduced() ? 1 : 0.22);
         if (Math.abs(target - sizes[i]) > 0.3) moving = true; else sizes[i] = target;
         el.style.setProperty("--size", `${sizes[i].toFixed(1)}px`);
       });
@@ -77,6 +78,8 @@ export default function Dock() {
             <i className={n.icon} />
           </a>
         ))}
+        <span className="dock-sep" aria-hidden="true" />
+        <MotionSwitch />
       </nav>
     </>
   );

@@ -6,7 +6,7 @@ export default function InkFill({ text, className = "statement" }: { text: strin
   const ref = useRef<HTMLParagraphElement>(null);
   useEffect(() => {
     const el = ref.current;
-    if (!el || !CSS.supports("animation-timeline: view()") || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (!el || !CSS.supports("animation-timeline: view()")) return;
     const words = text.trim().split(/\s+/);
     el.textContent = "";
     words.forEach((w, i) => {

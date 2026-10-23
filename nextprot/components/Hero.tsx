@@ -7,6 +7,7 @@ const d = (ms: number) => ({ "--d": `${ms}ms` } as CSSProperties);
 export default function Hero() {
   return (
     <section className="hero" id="home">
+      <div className="aurora" aria-hidden="true"><i /><i /><i /></div>
       <StarField />
       <div className="wrap hero-grid">
         <div className="hero-copy">

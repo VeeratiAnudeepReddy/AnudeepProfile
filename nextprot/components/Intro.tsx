@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { isReduced } from "@/lib/motion";
 
 /** Template splash, kept. It lifts like a curtain, can be skipped with a click, and shows once per session. */
 export default function Intro() {
@@ -9,7 +10,7 @@ export default function Intro() {
     const root = document.documentElement;
     let seen = false;
     try { seen = sessionStorage.getItem("intro-seen") === "1"; } catch {}
-    const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const reduce = isReduced();
     if (seen || reduce) { root.classList.add("ready"); setPhase("gone"); return; }
     const timers: number[] = [];
     const leave = () => {
