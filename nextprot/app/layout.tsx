@@ -1,9 +1,10 @@
 import type { Metadata, Viewport } from "next";
-import { Schibsted_Grotesk, Orbitron } from "next/font/google";
+import { Outfit } from "next/font/google";
 import "./globals.css";
 
-const schibsted = Schibsted_Grotesk({ subsets: ["latin"], weight: ["400", "500", "600", "800"], variable: "--font-schibsted", display: "swap" });
-const orbitron = Orbitron({ subsets: ["latin"], weight: ["500", "700"], variable: "--font-orbitron", display: "swap" });
+/** The free GC Methane demo lacks D, digits and most punctuation, so Outfit supplies those characters. */
+const outfit = Outfit({ subsets: ["latin"], weight: ["400", "500", "600", "700", "800"], variable: "--font-outfit", display: "swap" });
+
 
 export const metadata: Metadata = {
   title: "Anudeep Reddy Veerati | Full-Stack & AI Engineer",
@@ -13,9 +14,11 @@ export const viewport: Viewport = { themeColor: "#0a050a" };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${schibsted.variable} ${orbitron.variable}`} suppressHydrationWarning>
+    <html lang="en" className={outfit.variable} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: "document.documentElement.classList.add('js')" }} />
+        <link rel="preload" href="/fonts/GCMethane-ExtraBold.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
+        <link rel="preload" href="/fonts/GCMethane-Regular.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
       </head>
       <body>{children}</body>
