@@ -2,7 +2,6 @@
 import { useEffect, useRef, useState } from "react";
 import { nav } from "@/lib/content";
 import { isReduced } from "@/lib/motion";
-import MotionSwitch from "./MotionSwitch";
 
 const BASE = 46;        // resting size of an icon, px
 const PEAK = 86;        // size of the icon right under the pointer
@@ -78,8 +77,6 @@ export default function Dock() {
             <i className={n.icon} />
           </a>
         ))}
-        <span className="dock-sep" aria-hidden="true" />
-        <MotionSwitch />
       </nav>
     </>
   );

@@ -4,7 +4,6 @@ import { isReduced } from "@/lib/motion";
 
 type Star = { x: number; y: number; vx: number; vy: number; ox: number; oy: number; ovx: number; ovy: number; r: number; z: number; ph: number; period: number; rose: boolean; born: number; life: number };
 type Ring = { x: number; y: number; t0: number };
-type Meteor = { x: number; y: number; vx: number; vy: number; t0: number; life: number };
 
 /**
  * A sparse silver star field, living inside the hero only.
@@ -12,10 +11,7 @@ type Meteor = { x: number; y: number; vx: number; vy: number; t0: number; life: 
  *  - Each star joins only its one or two nearest neighbours, and those joins breathe in and out.
  *  - The pointer disturbs them: stars are shoved away from it, swirl a little, and spring back to their drift.
  *    A small rose constellation joins the nearest ones to the pointer, with a fading trail behind it.
- *  - A click sends a shockwave through the sky that scatters the stars; a shooting star crosses every few seconds.
- *
- * With prefers-reduced-motion the sky still drifts slowly and responds to the pointer (that motion is the
- * visitor's own); only the automatic shooting stars are dropped.
+ *  - A click sends a shockwave through the sky that scatters the stars.
  */
 export default function StarField() {
   const ref = useRef<HTMLCanvasElement>(null);
@@ -31,7 +27,7 @@ export default function StarField() {
     const coarse = matchMedia("(pointer: coarse)").matches;
 
     let w = 0, h = 0, dpr = 1, raf = 0, last = 0, stars: Star[] = [];
-    let rings: Ring[] = [], meteors: Meteor[] = [], nextMeteor = 0;
+    let rings: Ring[] = [];
     let scrollV = 0, lastScrollY = scrollY;
     const ptr = { x: -9999, y: -9999, on: false, speed: 0 };
     const trail: { x: number; y: number; t: number }[] = [];
@@ -57,15 +53,6 @@ export default function StarField() {
       const base = stars.filter((s) => s.life === Infinity);
       stars = [...base.slice(0, want), ...stars.filter((s) => s.life !== Infinity)];
       while (stars.filter((s) => s.life === Infinity).length < want) stars.push(make());
-    };
-
-    const spawnMeteor = (now: number) => {
-      const fromLeft = Math.random() < 0.6;
-      const sp = 0.9 + Math.random() * 0.7;
-      meteors.push({
-        x: fromLeft ? Math.random() * w * 0.5 : w * (0.5 + Math.random() * 0.5), y: -20 + Math.random() * h * 0.35,
-        vx: (fromLeft ? 1 : -1) * sp * 0.75, vy: sp * 0.55, t0: now, life: 1100 + Math.random() * 500,
-      });
     };
 
     const shock = (x: number, y: number, now: number) => {
@@ -197,11 +184,11 @@ export default function StarField() {
           g.addColorStop(0, "rgba(226, 139, 165, .24)"); g.addColorStop(1, "rgba(226, 139, 165, 0)");
           ctx.fillStyle = g; ctx.beginPath(); ctx.arc(ptr.x, ptr.y, 54, 0, 6.283); ctx.fill();
         }
-        while (trail.length && now - trail[0].t > 520) trail.shift();
+        while (trail.length && now - trail[0].t > 150) trail.shift();
         if (trail.length > 1) {
           for (let i = 1; i < trail.length; i++) {
-            const age = (now - trail[i].t) / 520, a = (1 - age) * 0.45;
-            ctx.strokeStyle = `rgba(255,185,205,${a.toFixed(3)})`; ctx.lineWidth = 1.6 * (1 - age) + 0.3;
+            const age = (now - trail[i].t) / 150, a = (1 - age) * 0.3;
+            ctx.strokeStyle = `rgba(255,185,205,${a.toFixed(3)})`; ctx.lineWidth = 1.1 * (1 - age) + 0.2;
             ctx.beginPath(); ctx.moveTo(trail[i - 1].x, trail[i - 1].y); ctx.lineTo(trail[i].x, trail[i].y); ctx.stroke();
           }
         }
@@ -214,18 +201,6 @@ export default function StarField() {
           ctx.beginPath(); ctx.arc(r.x, r.y, 8 + e * 180, 0, 6.283); ctx.stroke();
           ctx.strokeStyle = `rgba(255,120,155,${((1 - k) * 0.35).toFixed(3)})`;
           ctx.beginPath(); ctx.arc(r.x, r.y, 4 + e * 120, 0, 6.283); ctx.stroke();
-        }
-
-        // shooting stars (automatic motion, so skipped under reduced motion)
-        if (!reduce && now > nextMeteor) { spawnMeteor(now); nextMeteor = now + 3200 + Math.random() * 4200; }
-        meteors = meteors.filter((m) => now - m.t0 < m.life);
-        for (const m of meteors) {
-          const age = now - m.t0, k = age / m.life, ex = m.x + m.vx * age * 0.9, ey = m.y + m.vy * age * 0.9;
-          const tx = ex - m.vx * 130, ty = ey - m.vy * 130, a = Math.sin(k * Math.PI);
-          const g = ctx.createLinearGradient(ex, ey, tx, ty);
-          g.addColorStop(0, `rgba(245,247,255,${(a * 0.95).toFixed(3)})`); g.addColorStop(1, "rgba(245,247,255,0)");
-          ctx.strokeStyle = g; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(ex, ey); ctx.lineTo(tx, ty); ctx.stroke();
-          ctx.fillStyle = `rgba(255,255,255,${a.toFixed(3)})`; ctx.beginPath(); ctx.arc(ex, ey, 1.6, 0, 6.283); ctx.fill();
         }
       }
       stars = stars.filter((s) => s.life === Infinity || now - s.born < s.life);
@@ -248,7 +223,7 @@ export default function StarField() {
       if (ptr.on) ptr.speed = Math.max(ptr.speed, Math.hypot(p.x - ptr.x, p.y - ptr.y));
       ptr.x = p.x; ptr.y = p.y; ptr.on = true; clearTimeout(releaseTimer);
       trail.push({ x: p.x, y: p.y, t: performance.now() });
-      if (trail.length > 40) trail.shift();
+      if (trail.length > 8) trail.shift();
     };
     const onDown = (e: PointerEvent) => {
       const p = local(e);
@@ -267,7 +242,6 @@ export default function StarField() {
     const io = new IntersectionObserver(([e]) => { visible = e.isIntersecting; }); io.observe(hero);
     resize();
     document.addEventListener("visibilitychange", onVis);
-    nextMeteor = performance.now() + 2200;
     addEventListener("pointermove", onMove, { passive: true });
     addEventListener("pointerdown", onDown, { passive: true });
     addEventListener("pointerup", onUp, { passive: true });

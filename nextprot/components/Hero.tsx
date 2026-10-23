@@ -36,7 +36,6 @@ export default function Hero() {
           </div>
         </div>
         <div className="hero-visual" data-tilt>
-          <span className="portrait-ring" aria-hidden="true" />
           <div className="portrait">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/anudeep.jpg" alt="Portrait of Anudeep Reddy Veerati" width={1080} height={1080} fetchPriority="high" />
