@@ -1366,3 +1366,20 @@ html { scroll-behavior: smooth; }
     .rv { opacity: 1; }
     .rv.in, #real-site { animation: none; }
 }
+
+
+/* patent card */
+.patent-card {
+    display: flex; gap: 22px; align-items: center; padding: 24px 28px; border-radius: 18px;
+    background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 80, 120, 0.25);
+    box-shadow: 0 0 25px rgba(255, 80, 120, 0.15); backdrop-filter: blur(12px);
+    transition: transform .45s cubic-bezier(.22, 1, .36, 1), box-shadow .45s ease;
+}
+.patent-card:hover { transform: translateY(-4px); box-shadow: 0 0 35px rgba(255, 80, 120, 0.4); }
+.patent-icon {
+    flex-shrink: 0; width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-size: 26px; color: #fff; background: linear-gradient(135deg, #ff4d6d, #7a0c2e); box-shadow: 0 0 25px rgba(255, 80, 120, 0.6);
+}
+.patent-body h3 { color: #ff9db3; font-size: 1.1rem; line-height: 1.45; margin-bottom: 12px; }
+.patent-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+@media (max-width: 640px) { .patent-card { flex-direction: column; text-align: center; padding: 22px 18px; } .patent-tags { justify-content: center; } }

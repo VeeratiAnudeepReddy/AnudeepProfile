@@ -548,81 +548,105 @@ document.getElementById("contact-form").addEventListener("submit", e => {
     }
 
     // ------------------------------------------------------------
-    // 6. StudyAI: one topic -> 4 study formats
+    // 6. Recoverix: shipment exception -> piggyback assignment
     // ------------------------------------------------------------
-    function initStudy(root) {
-        const { head, body, foot } = scaffold(root, "Illustrative output. The real platform generates this with LLM APIs");
-        const topic = el("select");
-        const go = btn("Generate");
-        head.insertBefore(topic, head.children[1]); head.insertBefore(go, head.children[2]);
+    function initRecover(root) {
+        const { head, body, foot } = scaffold(root, "Illustrative. The real system searches a 91-hub, 143-edge Telangana graph");
+        const bNew = btn("New exception"), bRun = btn("Recover", "sim-btn on");
+        head.insertBefore(bNew, head.children[1]);
+        head.insertBefore(bRun, head.children[2]);
 
-        const data = {
-            "Photosynthesis": {
-                explain: "<b>Photosynthesis</b> converts light energy into chemical energy. In the chloroplast, the <b>light reactions</b> split water and make ATP and NADPH; the <b>Calvin cycle</b> then uses them to fix CO₂ into glucose. Output: glucose and O₂.",
-                quiz: [["Where does the Calvin cycle occur?", ["Thylakoid membrane", "Stroma", "Mitochondria"], 1], ["Which gas is released?", ["CO₂", "N₂", "O₂"], 2]],
-                cards: [["Light reactions", "Make ATP + NADPH, release O₂"], ["Calvin cycle", "Fixes CO₂ into glucose in the stroma"], ["Chlorophyll", "Pigment that absorbs light"]],
-                plan: ["Day 1 · Read overview + chloroplast diagram", "Day 2 · Light reactions, practise flashcards", "Day 3 · Calvin cycle, take the quiz", "Day 4 · Past questions + review weak cards"],
-            },
-            "Binary Search": {
-                explain: "<b>Binary search</b> finds a target in a <b>sorted</b> array by repeatedly halving the search range: compare with the middle, discard the half that can't contain the target. Time complexity <b>O(log n)</b>.",
-                quiz: [["Required precondition?", ["Sorted data", "Unique values", "Linked list"], 0], ["Worst-case time?", ["O(n)", "O(log n)", "O(1)"], 1]],
-                cards: [["Mid index", "lo + (hi - lo) / 2 avoids overflow"], ["Loop end", "lo > hi means not found"], ["Variants", "Lower bound, upper bound, search on answer"]],
-                plan: ["Day 1 · Learn the loop + invariants", "Day 2 · Lower/upper bound problems", "Day 3 · Search on answer space", "Day 4 · Timed practice set"],
-            },
-        };
-        Object.keys(data).forEach(k => topic.append(new Option(k, k)));
+        const hubs = { NZB: [150, 24], KNR: [275, 22], WGL: [385, 38], SRD: [120, 78], HYD: [250, 72], KMM: [395, 96], MBN: [185, 112], NLG: [320, 112] };
+        const edges = [["NZB","KNR"],["KNR","WGL"],["KNR","HYD"],["NZB","SRD"],["SRD","HYD"],["HYD","WGL"],["HYD","MBN"],["HYD","NLG"],["NLG","KMM"],["WGL","KMM"]];
+        const trucks = [
+            { id: "T1", color: "#ff9db3", route: ["NZB", "KNR", "HYD", "NLG", "KMM"], free: 40 },
+            { id: "T2", color: "#7cffb2", route: ["SRD", "HYD", "WGL"], free: 15 },
+            { id: "T3", color: "#ffd479", route: ["MBN", "HYD", "NLG"], free: 60 },
+        ];
+        const spots = ["WGL", "MBN", "KNR", "KMM", "NLG"];
+        const weight = 25;
 
-        const tabs = el("div", "chips"); tabs.style.marginBottom = "6px";
-        const formats = [["explain", "Explanation"], ["quiz", "Quiz"], ["cards", "Flashcards"], ["plan", "Study plan"]];
-        const content = el("div", "sim-body scroll");
-        body.style.display = "flex"; body.style.flexDirection = "column";
-        body.append(tabs, content);
-
-        let cur = "explain", ready = false;
-        const tabEls = formats.map(([k, label]) => {
-            const c = el("span", "chip", label); c.style.cursor = "pointer";
-            c.onclick = () => { cur = k; render(); };
-            tabs.append(c); return c;
+        const W = 480, H = 130;
+        const svg = svgEl("svg", { viewBox: `0 0 ${W} ${H}` });
+        edges.forEach(([a, b]) => svg.append(svgEl("line", { x1: hubs[a][0], y1: hubs[a][1], x2: hubs[b][0], y2: hubs[b][1], stroke: "rgba(255,255,255,.16)", "stroke-width": 1.4 })));
+        Object.entries(hubs).forEach(([n, [x, y]]) => {
+            svg.append(svgEl("circle", { cx: x, cy: y, r: 4, fill: "#14060c", stroke: "#8f8f8f" }));
+            const t = svgEl("text", { x, y: y + 13, fill: "#8f8f8f", "font-size": 8, "text-anchor": "middle" }); t.textContent = n; svg.append(t);
         });
+        const link = svgEl("line", { stroke: "#7cffb2", "stroke-width": 1.6, "stroke-dasharray": "4 3", opacity: 0 });
+        const pin = svgEl("circle", { r: 6, fill: "#ff4d6d", stroke: "#fff", "stroke-width": 1.2 });
+        svg.append(link, pin);
+        const dots = trucks.map(t => { const c = svgEl("circle", { r: 4, fill: t.color }); svg.append(c); return c; });
+        body.append(svg);
 
-        function render() {
-            tabEls.forEach((c, i) => c.classList.toggle("on", formats[i][0] === cur));
-            content.innerHTML = "";
-            if (!ready) { content.append(el("div", "study-text", "Pick a topic and press <b>Generate</b> to build 4 study formats.")); return; }
-            const d = data[topic.value];
-            if (cur === "explain") content.append(el("div", "study-text", d.explain));
-            if (cur === "plan") d.plan.forEach(p => content.append(el("div", "card-flip", p)));
-            if (cur === "cards") d.cards.forEach(([q, a]) => {
-                const c = el("div", "card-flip", `<b>${q}</b> <span style="color:#8f8f8f">(tap to flip)</span>`);
-                let flip = false; c.onclick = () => { flip = !flip; c.innerHTML = flip ? a : `<b>${q}</b> <span style="color:#8f8f8f">(tap to flip)</span>`; };
-                content.append(c);
-            });
-            if (cur === "quiz") d.quiz.forEach(([q, opts, ans]) => {
-                content.append(el("div", "study-text", `<b>${q}</b>`));
-                opts.forEach((o, i) => {
-                    const b = btn(o, "opt");
-                    b.onclick = () => { b.classList.add(i === ans ? "right" : "wrong"); };
-                    content.append(b);
-                });
-            });
+        const out = el("div", "chips"); out.style.margin = "6px 0 4px";
+        const voice = el("span", "chip ok", "Sarvam voice call (Telugu)"), app = el("span", "chip ok", "Driver app notified");
+        const kp = el("div", "kpis", "<div><b class='r-win'>--</b><span>assigned truck</span></div><div><b class='r-type' style='font-size:12px;line-height:1.6'>--</b><span>piggyback type</span></div><div><b class='r-score'>--</b><span>score</span></div>");
+        body.parentNode.insertBefore(out, foot); body.parentNode.insertBefore(kp, foot);
+        const kWin = $(".r-win", kp), kType = $(".r-type", kp), kScore = $(".r-score", kp);
+
+        let spot = 0, winner = null, running = false;
+        const hubXY = n => hubs[n];
+        const neighbours = (a, b) => edges.some(([x, y]) => (x === a && y === b) || (x === b && y === a));
+        function place() {
+            const [x, y] = hubXY(spots[spot]);
+            pin.setAttribute("cx", x); pin.setAttribute("cy", y);
+            link.setAttribute("opacity", 0); winner = null; out.innerHTML = ""; kWin.textContent = kType.textContent = kScore.textContent = "--";
         }
+        function evaluate(hub) {
+            return trucks.map(t => {
+                if (t.free < weight) return { t, ok: false, type: "no capacity", score: 0 };
+                if (t.route.includes(hub)) return { t, ok: true, type: "at_node", score: 0.95 - (t.free - weight) / 400, via: hub };
+                const near = t.route.find(n => neighbours(n, hub));
+                if (near) return { t, ok: true, type: "pass_through", score: 0.82 - (t.free - weight) / 500, via: near };
+                let best = null, bd = 1e9;
+                t.route.forEach(n => { const d = Math.hypot(hubs[n][0] - hubs[hub][0], hubs[n][1] - hubs[hub][1]); if (d < bd) { bd = d; best = n; } });
+                return bd < 130 ? { t, ok: true, type: "detour", score: 0.66 - bd / 500, via: best } : { t, ok: false, type: "unreachable", score: 0 };
+            }).sort((a, b) => b.score - a.score);
+        }
+        async function recover() {
+            if (running) return; running = true;
+            const hub = spots[spot], ranked = evaluate(hub);
+            out.innerHTML = "";
+            ranked.forEach(r => out.append(el("span", "chip" + (r.ok ? "" : " bad"), `${r.t.id} · ${r.type}${r.ok ? " · " + r.score.toFixed(2) : ""}`)));
+            const best = ranked[0];
+            await sleep(600);
+            out.firstChild.classList.add("on"); winner = best;
+            kWin.textContent = best.t.id; kType.textContent = best.type; kScore.textContent = best.score.toFixed(2);
+            const [vx, vy] = hubs[best.via], [px, py] = hubs[hub];
+            link.setAttribute("x1", vx); link.setAttribute("y1", vy); link.setAttribute("x2", px); link.setAttribute("y2", py); link.setAttribute("opacity", best.via === hub ? 0 : 1);
+            await sleep(700); out.append(voice); voice.classList.add("on");
+            await sleep(800); out.append(app); app.classList.add("on");
+            running = false;
+        }
+        bNew.onclick = () => { if (running) return; voice.classList.remove("on"); app.classList.remove("on"); spot = (spot + 1) % spots.length; place(); };
+        bRun.onclick = recover;
+        place();
 
-        go.onclick = async () => {
-            go.textContent = "Generating…"; go.disabled = true;
-            content.innerHTML = ""; content.append(el("div", "study-text", "Reading material and generating explanations, quizzes, flashcards and a plan…"));
-            await sleep(900);
-            ready = true; go.textContent = "Generate"; go.disabled = false; render();
-        };
-        topic.onchange = () => { if (ready) render(); };
-        render();
+        const vis = watch(root);
+        let last = performance.now(), prog = trucks.map((_, i) => i * 0.3), raf = 0, alive = true;
+        (function loop(now) {
+            if (!alive) return;
+            const dt = Math.min((now - last) / 1000, 0.05); last = now;
+            if (vis.visible) trucks.forEach((t, i) => {
+                prog[i] = (prog[i] + dt * 0.07) % 1;
+                const pts = t.route.map(n => hubs[n]), seg = prog[i] * (pts.length - 1), k = Math.min(Math.floor(seg), pts.length - 2), f = seg - k;
+                dots[i].setAttribute("cx", pts[k][0] + (pts[k + 1][0] - pts[k][0]) * f);
+                dots[i].setAttribute("cy", pts[k][1] + (pts[k + 1][1] - pts[k][1]) * f);
+                dots[i].setAttribute("r", winner && winner.t === t ? 5.5 : 4);
+            });
+            raf = requestAnimationFrame(loop);
+        })(last);
+        onDispose(() => { alive = false; cancelAnimationFrame(raf); });
     }
+
 
     initPond($("#sim-pond"));
     initPrivacy($("#sim-privacy"));
     initTraffic($("#sim-traffic"));
     initCivix($("#sim-civix"));
     initRail($("#sim-rail"));
-    initStudy($("#sim-study"));
+    initRecover($("#sim-study"));
 })();
 
 
@@ -632,7 +656,7 @@ document.getElementById("contact-form").addEventListener("submit", e => {
 function initReveal() {
     const groups = [
         ".home-section, .home-visual", ".about-text, .photo-container", ".project-card",
-        ".tl-item", ".ach-card", ".list-card", ".service-card", ".sub-title"
+        ".tl-item", ".patent-card", ".ach-card", ".list-card", ".service-card", ".sub-title"
     ];
     const io = new IntersectionObserver(entries => {
         entries.forEach(e => {
