@@ -59,7 +59,16 @@ export default function Contact() {
         </div>
       </div>
       <footer className="footer wrap" style={{ marginTop: "clamp(72px, 9vw, 130px)" }}>
-        <div className="footer-row"><span>© 2026 Anudeep Reddy Veerati</span><span>Built with Next.js</span></div>
+        <div className="footer-mark" aria-hidden="true">Anudeep Reddy Veerati</div>
+        <div className="footer-row">
+          <span>© 2026 Anudeep Reddy Veerati</span>
+          <span className="footer-links">
+            <a href={profile.github} target="_blank" rel="noopener">GitHub</a>
+            <a href={profile.linkedin} target="_blank" rel="noopener">LinkedIn</a>
+            <a href={`mailto:${profile.email}`}>Email</a>
+          </span>
+          <a href="#home" className="to-top" onClick={(e) => { e.preventDefault(); scrollTo({ top: 0, behavior: "smooth" }); }}>Back to top <i className="fa-solid fa-arrow-up" /></a>
+        </div>
       </footer>
       <div className={`toast ${toast ? "on" : ""}`} role="status">{toast}</div>
     </section>

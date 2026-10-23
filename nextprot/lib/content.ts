@@ -102,6 +102,10 @@ export const stats = [
 
 export const timeline = [
   {
+    title: "Patent application filed", date: "31 Aug 2026", org: "VNR Vignana Jyothi Institute of Engineering and Technology",
+    points: ["Filed a patent application for a closed-loop call completion and callback management system with intelligent reminder scheduling. It is now published and awaiting examination."],
+  },
+  {
     title: "Full Stack Developer Intern", date: "Feb 2026 – Apr 2026", org: "PSNM Innovations · Remote",
     points: [
       "Architected StudyAI, an AI learning platform that turns study material into 4 formats: explanations, quizzes, flashcards and study plans.",
@@ -113,6 +117,10 @@ export const timeline = [
     title: "Product Team Member – Pothole Mapper", date: "2025",
     org: "VNR Vignana Jyothi Institute of Engineering and Technology · Hyderabad, India",
     points: ["Co-developed a community pothole-reporting tool and ran user-feedback cycles to improve usability."],
+  },
+  {
+    title: "B.Tech in Computer Science & Engineering begins", date: "2024", org: "VNR Vignana Jyothi Institute of Engineering and Technology · Hyderabad",
+    points: ["Started the four-year programme that led to the hackathon wins, the patent application and the projects shown on this page."],
   },
 ];
 

@@ -982,3 +982,49 @@ html.js.ready:not([data-motion="reduced"]) .top-actions { animation: load-rise 8
   .top-actions .btn-solid, .top-actions .btn-ghost { width: 40px; height: 40px; padding: 0; justify-content: center; }
   .ta-label { display: none; }
 }
+
+
+/* =====================================================================
+   FINISHING: edge clipping, chapter hairlines, auto-hiding corner actions, closing wordmark
+   ===================================================================== */
+
+/* nothing may push the page wider than the screen: decorations and sideways entrances are clipped at each section edge */
+html { overflow-x: clip; }
+#real-site, main, .hero, .proof, .sec, .footer { overflow-x: clip; }
+
+/* a fine gold hairline opens every chapter after the first */
+.sec { position: relative; }
+.sec::before {
+  content: ""; position: absolute; top: 0; left: 50%; width: min(var(--wrap), 100% - 2 * var(--gutter)); height: 1px; transform: translateX(-50%);
+  background: linear-gradient(90deg, transparent, rgba(213, 175, 77, .38) 20%, rgba(223, 228, 238, .22) 50%, rgba(213, 175, 77, .38) 80%, transparent);
+  pointer-events: none;
+}
+
+/* corner actions step aside while you read downward */
+.top-actions { transition: transform 520ms var(--ease-expo), opacity 320ms ease; }
+.top-actions.away { transform: translateY(-140%) !important; opacity: 0 !important; pointer-events: none; }
+
+/* closing wordmark */
+.footer { padding-bottom: 110px; border-top: 0; }
+.footer-mark {
+  font-weight: 800; font-size: clamp(1.6rem, .5rem + 6.1vw, 6.6rem); line-height: 1; letter-spacing: -0.025em; white-space: nowrap; margin-bottom: 30px; padding-bottom: .08em;
+  color: transparent; -webkit-text-stroke: 1px rgba(223, 228, 238, .22); user-select: none;
+  background: linear-gradient(100deg, rgba(213, 175, 77, 0) 0%, rgba(213, 175, 77, .30) 50%, rgba(213, 175, 77, 0) 100%); background-size: 240% 100%;
+  -webkit-background-clip: text; background-clip: text;
+}
+html[data-motion="full"] .footer-mark { animation: mark-sweep 9s ease-in-out infinite; }
+@keyframes mark-sweep { 0%, 100% { background-position: 100% 0; } 50% { background-position: 0 0; } }
+.footer-row { align-items: center; padding-top: 22px; border-top: 1px solid var(--line); gap: 14px 24px; }
+.footer-links { display: flex; gap: 22px; }
+.footer-links a, .to-top { color: var(--silver-dim); transition: color var(--t-hover) ease; }
+.footer-links a:hover, .to-top:hover { color: var(--rose-soft); }
+.to-top i { margin-left: 6px; font-size: .8rem; }
+@media (max-width: 640px) { .footer-mark { font-size: 7.4vw; } .footer-row { justify-content: flex-start; } }
+
+
+/* dark form controls and scrollbars, and a selection colour that stays readable on gold */
+html { color-scheme: dark; scrollbar-width: thin; scrollbar-color: rgba(213, 175, 77, .45) #0d0e11; }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: #0d0e11; }
+::-webkit-scrollbar-thumb { background: linear-gradient(180deg, rgba(213, 175, 77, .55), rgba(122, 98, 40, .55)); border-radius: 10px; border: 2px solid #0d0e11; }
+::selection { background: rgba(213, 175, 77, .85); color: #17130b; }
